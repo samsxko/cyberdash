@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - MONITORING</title>
+    <title>CYBER DASH - V4 ULTRA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -10,49 +10,52 @@
 
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Layout : Gauche (Classement) | Centre (Jeu) | Droite (Logs larges) */
-        #left-bar { width: 220px; border-right: 1px solid #00f2ff33; padding: 10px; background: #020202; }
-        #game-view { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; }
-        #right-bar { width: 380px; border-left: 1px solid #00f2ff33; padding: 10px; background: #020202; }
-
-        canvas { height: 98vh; aspect-ratio: 9/16; border: 2px solid #00f2ff; background: #000; }
-
-        .list { height: calc(100% - 50px); overflow-y: auto; scrollbar-width: none; }
-        .row { padding: 10px; border-bottom: 1px solid #00f2ff11; font-size: 13px; display: flex; justify-content: space-between; }
-        
-        /* Style des Logs détaillés */
-        .log-box { 
-            padding: 10px; margin-bottom: 10px; border-left: 4px solid #bc00ff; 
-            background: rgba(188, 0, 255, 0.05); font-size: 11px; line-height: 1.5;
-            animation: fadeIn 0.3s ease;
+        body { 
+            margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; 
+            display: flex; height: 100vh; overflow: hidden;
         }
-        .log-ip { color: #888; font-size: 10px; display: block; margin-top: 4px; border-top: 1px solid #333; padding-top: 4px; }
-        
-        h2 { font-size: 14px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff; padding-bottom: 10px; margin-top: 5px; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-        @media (max-width: 1100px) { #left-bar, #right-bar { display: none; } }
+        /* Layout 3 Colonnes */
+        #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
+        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+
+        canvas { height: 96vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; }
+
+        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.05); }
+        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
+        
+        /* Classement */
+        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.03); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; }
+        .rank-card b { color: #00f2ff; }
+
+        /* Logs */
+        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; line-height: 1.4; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); animation: slideIn 0.3s ease; }
+        .log-loc { color: #00f2ff; font-weight: bold; display: block; margin-top: 5px; }
+        .log-time { color: #666; font-size: 9px; float: right; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @media (max-width: 1000px) { #left-col, #right-col { display: none; } }
     </style>
 </head>
 <body>
 
-    <div id="left-bar">
-        <h2>🏆 TOP 15</h2>
-        <div id="leaderboard" class="list"></div>
+    <div id="left-col">
+        <div class="panel-header">Hall of Fame</div>
+        <div id="leaderboard" class="scroll-list"></div>
     </div>
 
-    <div id="game-view">
+    <div id="game-col">
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <div id="right-bar">
-        <h2>🌐 LOGS RÉSEAU</h2>
-        <div id="logs" class="list"></div>
+    <div id="right-col">
+        <div class="panel-header">Live Monitoring</div>
+        <div id="logs" class="scroll-list"></div>
     </div>
 
     <script>
+        // Ta config Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
           authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -62,58 +65,56 @@
           messagingSenderId: "360233647601",
           appId: "1:360233647601:web:60aa25f439019ed7511850"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        let netInfo = { ip: "...", loc: "Localisation..." };
+
+        let net = { ip: "127.0.0.1", loc: "Inconnu" };
         fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            netInfo.ip = d.ip;
-            netInfo.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
-        }).catch(() => {});
-
-        function writeLog(user, action) {
-            db.ref('logs').push({
-                user: user,
-                action: action,
-                ip: netInfo.ip,
-                loc: netInfo.loc,
-                time: new Date().toLocaleTimeString()
-            });
-        }
-
-        // --- CLASSEMENT LIVE ---
-        db.ref('bestScores').orderByChild('score').limitToLast(15).on('value', snap => {
-            let data = [];
-            snap.forEach(c => data.push(c.val()));
-            data.sort((a,b) => b.score - a.score);
-            document.getElementById('leaderboard').innerHTML = data.map((s,i) => `
-                <div class="row"><span>#${i+1} ${s.name}</span><b style="color:#00f2ff">${s.score}</b></div>
-            `).join('');
+            net.ip = d.ip; net.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
         });
 
-        // --- LOGS DÉTAILLÉS LIVE ---
+        function pushLog(u, a) {
+            db.ref('logs').push({ user: u, action: a, ip: net.ip, loc: net.loc, time: new Date().toLocaleTimeString() });
+        }
+
+        // --- CLASSEMENT (FIXÉ) ---
+        db.ref('bestScores').orderByChild('score').limitToLast(15).on('value', snap => {
+            let entries = [];
+            snap.forEach(c => entries.push(c.val()));
+            entries.sort((a,b) => b.score - a.score);
+            document.getElementById('leaderboard').innerHTML = entries.map((s,i) => `
+                <div class="rank-card">
+                    <span><b>#${i+1}</b> ${s.name}</span>
+                    <span>${s.score} pts</span>
+                </div>`).join('');
+        });
+
+        // --- LOGS (FIXÉ) ---
         db.ref('logs').limitToLast(20).on('value', snap => {
             let html = "";
             snap.forEach(c => {
                 const l = c.val();
-                html = `<div class="log-box">
-                    <b style="color:#bc00ff">${l.user}</b>: ${l.action}<br>
-                    <span style="color:#00f2ff">📍 ${l.loc}</span>
-                    <span class="log-ip">IP: ${l.ip} — ${l.time}</span>
+                let color = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
+                html = `<div class="log-card" style="border-left-color:${color}">
+                    <span class="log-time">${l.time}</span>
+                    <b style="color:${color}">${l.user}</b>: ${l.action}<br>
+                    <span class="log-loc">📍 ${l.loc}</span>
                 </div>` + html;
             });
             document.getElementById('logs').innerHTML = html;
         });
 
-        // --- MOTEUR DE JEU ---
+        // --- JEU ULTRA ---
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         canvas.width = 600; canvas.height = 1000;
 
-        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], keys = {};
+        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], stars = [], keys = {};
 
-        function handleScore(p, s) {
+        // Init étoiles
+        for(let i=0; i<50; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2});
+
+        function saveFinalScore(p, s) {
             if(s < 1) return;
             const ref = db.ref('bestScores/' + p.toLowerCase().trim());
             ref.once('value', snap => {
@@ -123,7 +124,7 @@
 
         window.addEventListener("keydown", e => {
             if(state === "MENU") {
-                if(e.key === "Enter" && pseudo.length >= 3) { state = "PLAYING"; writeLog(pseudo, "REJOINT"); }
+                if(e.key === "Enter" && pseudo.length >= 3) { state = "PLAYING"; pushLog(pseudo, "CONNECTÉ"); }
                 else if(e.key === "Backspace") pseudo = pseudo.slice(0, -1);
                 else if(e.key.length === 1 && pseudo.length < 10) pseudo += e.key.toUpperCase();
             }
@@ -133,30 +134,34 @@
         window.addEventListener("keyup", e => keys[e.key] = false);
 
         canvas.addEventListener("touchstart", e => {
-            const rx = (e.touches[0].clientX - canvas.getBoundingClientRect().left) / canvas.clientWidth * 600;
-            if(state !== "PLAYING") { if(pseudo.length >= 3) { state = "PLAYING"; writeLog(pseudo, "REJOINT"); } }
-            else { if(rx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
+            const r = canvas.getBoundingClientRect();
+            const tx = (e.touches[0].clientX - r.left) / r.width * 600;
+            if(state === "MENU" && pseudo.length >= 3) { state = "PLAYING"; pushLog(pseudo, "CONNECTÉ"); }
+            else if(state === "GAMEOVER") { state = "MENU"; score = 0; level = 1; obstacles = []; ballX = 300; }
+            else { if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
         });
         canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
 
         function update() {
+            stars.forEach(s => { s.y += 1; if(s.y > 1000) s.y = 0; });
             if(state !== "PLAYING") return;
-            let spd = 8 + (level * 0.4);
-            if(keys["ArrowLeft"]) ballX -= 11;
-            if(keys["ArrowRight"]) ballX += 11;
-            ballX = Math.max(30, Math.min(570, ballX));
+
+            let spd = 8 + (level * 0.5);
+            if(keys["ArrowLeft"]) ballX -= 12;
+            if(keys["ArrowRight"]) ballX += 12;
+            ballX = Math.max(35, Math.min(565, ballX));
 
             if(Math.random() < 0.05) {
-                let w = Math.max(160, 420 - (level * 20));
-                obstacles.push({x: Math.random()*(600-w), y: -40, w: w, hit: false});
+                let w = Math.max(170, 420 - (level * 20));
+                obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
             }
 
             obstacles.forEach(o => {
                 o.y += spd;
-                if(o.y > 880 && o.y < 915 && !(ballX > o.x && ballX < o.x + o.w)) {
+                if(o.y > 870 && o.y < 910 && !(ballX > o.x && ballX < o.x + o.w)) {
                     state = "GAMEOVER";
-                    writeLog(pseudo, "CRASH (Score: " + score + ")");
-                    handleScore(pseudo, score);
+                    pushLog(pseudo, "CRASH (Score: " + score + ")");
+                    saveFinalScore(pseudo, score);
                 }
                 if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score%10===0) level++; }
             });
@@ -164,22 +169,37 @@
         }
 
         function draw() {
-            ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
+            // Fond
+            ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
+            ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+
             if(state === "MENU") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "bold 50px Orbitron";
+                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
+                ctx.shadowBlur = 20; ctx.shadowColor = "#00f2ff";
                 ctx.fillText("CYBER DASH", 300, 400);
-                ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron";
-                ctx.fillText("NOM: " + (pseudo || "---") + "_", 300, 500);
+                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "25px Orbitron";
+                ctx.fillText("PILOTE: " + (pseudo || "---") + "_", 300, 500);
+                ctx.font = "14px Orbitron"; ctx.fillText("ENTRÉE OU TOUCHER POUR LANCER", 300, 580);
             } else if(state === "PLAYING") {
-                ctx.fillStyle = "#00f2ff";
-                obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 30); ctx.fillRect(o.x+o.w, o.y, 600, 30); });
-                ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ballX, 900, 20, 0, Math.PI*2); ctx.fill();
-                ctx.font = "bold 40px Orbitron"; ctx.textAlign="left"; ctx.fillText(score, 40, 70);
+                // Obstacles avec lueur
+                ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
+                obstacles.forEach(o => { 
+                    ctx.fillRect(0, o.y, o.x, 35); 
+                    ctx.fillRect(o.x+o.w, o.y, 600, 35); 
+                });
+                // Balle
+                ctx.shadowBlur = 25; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
+                // Score
+                ctx.shadowBlur = 10; ctx.textAlign = "left"; ctx.font = "900 50px Orbitron";
+                ctx.fillText(score, 40, 80);
+                ctx.shadowBlur = 0;
             } else if(state === "GAMEOVER") {
-                ctx.textAlign = "center"; ctx.fillStyle = "red"; ctx.font = "bold 60px Orbitron";
-                ctx.fillText("CRASHED", 300, 450);
-                ctx.fillStyle = "#fff"; ctx.font = "25px Orbitron";
-                ctx.fillText("FINAL: " + score, 300, 550);
+                ctx.textAlign = "center"; ctx.fillStyle = "#ff4444"; ctx.font = "900 70px Orbitron";
+                ctx.shadowBlur = 25; ctx.shadowColor = "red";
+                ctx.fillText("TERMINÉ", 300, 450);
+                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "30px Orbitron";
+                ctx.fillText("SCORE: " + score, 300, 550);
             }
             requestAnimationFrame(draw);
         }
