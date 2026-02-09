@@ -2,43 +2,40 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - SAGA FIXED</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER DASH - SAGA EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        #left-col, #right-col { width: 250px; border: 1px solid #00f2ff33; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        canvas { height: 95vh; aspect-ratio: 9/16; border: 2px solid #00f2ff; background: #000; box-shadow: 0 0 20px #00f2ff55; }
-        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
-        .scroll { flex-grow: 1; overflow-y: auto; padding: 10px; scrollbar-width: none; }
-        .card { padding: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.05); border-left: 3px solid #00f2ff; font-size: 11px; }
-        .btn-pay { margin: 10px; padding: 12px; background: #ffc439; color: #003087; text-align: center; border-radius: 5px; font-weight: 900; text-decoration: none; }
+        #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
+        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; background: #000; z-index: 1; }
+        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00f2ff44; }
+        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
+        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; }
+        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
+        #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
         @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } canvas { width: 100vw; height: 100vh; border: none; } }
     </style>
 </head>
 <body>
-
+    <input type="text" id="mobileInput" maxlength="10">
     <div id="left-col">
-        <div class="panel-header">🏆 CLASSEMENT</div>
-        <div id="leaderboard" class="scroll"></div>
-        <a href="https://paypal.me/frsaamya" target="_blank" class="btn-pay">☕ PAYPAL</a>
+        <div class="panel-header">🏆 Top 15 World</div>
+        <div id="leaderboard" class="scroll-list"></div>
     </div>
-
-    <div id="game-col">
-        <canvas id="gameCanvas"></canvas>
-    </div>
-
+    <div id="game-col"><canvas id="gameCanvas"></canvas></div>
     <div id="right-col">
-        <div class="panel-header">🛰️ LIVE TRACKING</div>
-        <div id="logs" class="scroll"></div>
+        <div class="panel-header">🛰️ Live Tracking</div>
+        <div id="logs" class="scroll-list"></div>
     </div>
 
 <script>
-    // --- CONFIGURATION ---
+    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -53,129 +50,155 @@
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const mInput = document.getElementById('mobileInput');
     canvas.width = 600; canvas.height = 1000;
 
     let state = "MENU", pseudo = "", score = 0, ballX = 300, obstacles = [], stars = [], keys = {};
-    let userIP = "temp_" + Math.floor(Math.random()*1000);
-    let reachedLevel = 1;
+    let userIP = "", reachedLevel = 1, selectedLevel = 1, swipeY = 0;
 
-    // --- RÉCUPÉRATION DATA ---
+    for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+
+    // DATA RECOVERY
     fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
         userIP = d.ip.replace(/\./g, '_');
-        db.ref('users/' + userIP + '/reached').on('value', snap => {
-            if(snap.exists()) reachedLevel = snap.val();
-        });
+        db.ref('users/' + userIP + '/reached').on('value', snap => { if(snap.exists()) reachedLevel = snap.val(); });
     });
 
+    // LEADERBOARD & LOGS (Ta version Ultimate)
     db.ref('bestScores').on('value', snap => {
-        let items = []; snap.forEach(c => items.push(c.val()));
-        items.sort((a,b) => b.score - a.score);
-        document.getElementById('leaderboard').innerHTML = items.slice(0,10).map(s => `<div class="card"><b>${s.name}</b>: ${s.score}</div>`).join('');
+        let entries = []; snap.forEach(c => entries.push(c.val()));
+        entries.sort((a,b) => b.score - a.score);
+        document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `<div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span style="color:#00f2ff">${s.score}</span></div>`).join('');
     });
 
-    db.ref('logs').limitToLast(10).on('value', snap => {
-        let h = ""; snap.forEach(c => { h = `<div class="card">${c.val().user}: ${c.val().action}</div>` + h; });
+    db.ref('logs').limitToLast(15).on('value', snap => {
+        let h = ""; snap.forEach(c => {
+            const l = c.val(); let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
+            h = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}</div>` + h;
+        });
         document.getElementById('logs').innerHTML = h;
     });
 
-    // --- LOGIQUE JEU ---
-    function askPseudo() {
-        if(!pseudo) {
-            let p = prompt("ENTRE TON PSEUDO :");
-            if(p && p.length >= 2) {
-                pseudo = p.toUpperCase();
-                db.ref('logs').push({user: pseudo, action: "Connecté", time: new Date().toLocaleTimeString()});
-            }
-        }
-    }
-
+    // INPUTS
+    mInput.addEventListener('input', (e) => { if(state === "MENU") pseudo = e.target.value.toUpperCase(); });
     canvas.addEventListener("touchstart", e => {
         e.preventDefault();
-        askPseudo();
-        const rect = canvas.getBoundingClientRect();
-        const tx = (e.touches[0].clientX - rect.left) / rect.width * 600;
-        const ty = (e.touches[0].clientY - rect.top) / rect.height * 1000;
+        swipeY = e.touches[0].clientY;
+        const r = canvas.getBoundingClientRect();
+        const tx = (e.touches[0].clientX - r.left) / r.width * 600;
+        const ty = (e.touches[0].clientY - r.top) / r.height * 1000;
 
-        if(state === "MENU" && pseudo) {
-            if(ty > 400 && ty < 600) { state = "PLAYING"; score = 0; obstacles = []; }
+        if(state === "MENU") {
+            mInput.focus();
+            if(ty > 450 && ty < 550 && selectedLevel <= reachedLevel && pseudo.length >= 3) startGame("SAGA");
+            if(ty > 820 && ty < 900 && pseudo.length >= 3) startGame("INFINITE");
+        } else if(state === "GAMEOVER") {
+            state = "MENU";
         } else {
-            if(tx < 300) keys["Left"] = true; else keys["Right"] = true;
+            if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true;
         }
     });
 
-    canvas.addEventListener("touchend", () => { keys = {}; });
-
-    function draw() {
-        ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-        
-        // Etoiles
-        ctx.fillStyle = "#fff";
-        if(stars.length < 50) stars.push({x: Math.random()*600, y: 0, s: Math.random()*2});
-        stars.forEach((s, i) => {
-            s.y += 2;
-            ctx.fillRect(s.x, s.y, s.s, s.s);
-            if(s.y > 1000) stars.splice(i, 1);
-        });
-
-        if(state === "MENU") {
-            ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "bold 60px Orbitron";
-            ctx.fillText("CYBER DASH", 300, 300);
-            ctx.font = "20px Orbitron";
-            ctx.fillText(pseudo ? "PLAYER: " + pseudo : "TOUCHE POUR COMMENCER", 300, 420);
-            if(pseudo) {
-                ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 3;
-                ctx.strokeRect(150, 470, 300, 80);
-                ctx.fillText("JOUER NIVEAU " + reachedLevel, 300, 520);
-                ctx.font = "12px Orbitron";
-                ctx.fillText("OBJECTIF: " + (reachedLevel * 100) + " PTS", 300, 580);
-            }
-        } else {
-            updateGame();
+    canvas.addEventListener("touchend", e => {
+        let diff = e.changedTouches[0].clientY - swipeY;
+        if(state === "MENU" && Math.abs(diff) > 50) {
+            if(diff > 0) selectedLevel = Math.max(1, selectedLevel - 1);
+            else selectedLevel = Math.min(10, selectedLevel + 1);
         }
-        requestAnimationFrame(draw);
+        keys = {};
+    });
+
+    function startGame(mode) {
+        state = mode; mInput.blur();
+        score = 0; obstacles = []; ballX = 300;
+        db.ref('logs').push({ user: pseudo, action: "DÉPART " + mode, time: new Date().toLocaleTimeString() });
     }
 
-    function updateGame() {
-        if(keys["Left"]) ballX -= 12; if(keys["Right"]) ballX += 12;
+    function update() {
+        stars.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
+        if(state === "MENU" || state === "GAMEOVER") return;
+
+        let goal = selectedLevel * 100;
+        let spd = state === "SAGA" ? (8 + selectedLevel) : (9 + score/15);
+
+        if(keys["ArrowLeft"]) ballX -= 12;
+        if(keys["ArrowRight"]) ballX += 12;
         ballX = Math.max(30, Math.min(570, ballX));
 
-        let speed = 7 + (reachedLevel * 0.5);
-        let goal = reachedLevel * 100;
-
         if(Math.random() < 0.05) {
-            obstacles.push({y: -50, gap: Math.random()*400 + 100, hit: false});
+            let gap = Math.random() * 400 + 100;
+            obstacles.push({gap: gap, y: -50, hit: false});
         }
 
-        obstacles.forEach((o, i) => {
-            o.y += speed;
-            ctx.fillStyle = "#00f2ff"; ctx.shadowBlur = 10; ctx.shadowColor = "#00f2ff";
-            ctx.fillRect(0, o.y, o.gap - 50, 35);
-            ctx.fillRect(o.gap + 50, o.y, 600, 35);
-            ctx.shadowBlur = 0;
-
-            // Collision
-            if(o.y > 880 && o.y < 915 && (ballX < o.gap - 40 || ballX > o.gap + 40)) {
-                db.ref('logs').push({user: pseudo, action: "Crash Niv "+reachedLevel+" à "+score});
-                state = "MENU";
+        obstacles.forEach(o => {
+            o.y += spd;
+            if(o.y > 880 && o.y < 915 && (ballX < o.gap-45 || ballX > o.gap+45)) {
+                if(state === "INFINITE") {
+                    db.ref('bestScores/' + userIP).once('value').then(snap => {
+                        if(!snap.exists() || snap.val().score < score) db.ref('bestScores/' + userIP).set({name: pseudo, score: score});
+                    });
+                }
+                db.ref('logs').push({ user: pseudo, action: "CRASH (" + score + ")" });
+                state = "GAMEOVER";
             }
-            // Score
             if(o.y > 1000 && !o.hit) {
                 o.hit = true; score++;
-                if(score >= goal) {
-                    reachedLevel++;
-                    db.ref('users/' + userIP + '/reached').set(reachedLevel);
-                    db.ref('bestScores/' + userIP).set({name: pseudo, score: score});
+                if(state === "SAGA" && score >= goal) {
+                    db.ref('users/' + userIP + '/reached').set(Math.max(reachedLevel, selectedLevel + 1));
                     state = "MENU";
                 }
             }
         });
         obstacles = obstacles.filter(o => o.y < 1100);
-
-        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-        ctx.font = "bold 50px Orbitron"; ctx.textAlign = "left";
-        ctx.fillText(score, 40, 80);
     }
 
+    function draw() {
+        ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+
+        if(state === "MENU") {
+            ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
+            ctx.fillText("CYBER DASH", 300, 200);
+            
+            // MENU SAGA (Le Carrousel vertical)
+            [selectedLevel-1, selectedLevel, selectedLevel+1].forEach(lvl => {
+                if(lvl < 1 || lvl > 10) return;
+                let y = 500 + (lvl - selectedLevel) * 150;
+                let isFocus = lvl === selectedLevel;
+                let locked = lvl > reachedLevel;
+                
+                ctx.globalAlpha = isFocus ? 1 : 0.3;
+                if(isFocus) {
+                    ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+                    ctx.strokeRect(120, y-65, 360, 100);
+                }
+                ctx.fillStyle = locked ? "#555" : "#fff";
+                ctx.font = isFocus ? "900 35px Orbitron" : "20px Orbitron";
+                ctx.fillText((locked ? "🔒 LVL " : "LEVEL ") + lvl, 300, y);
+                if(isFocus && !locked) { ctx.font = "12px Orbitron"; ctx.fillText("GOAL: " + (lvl*100), 300, y+25); }
+                ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+            });
+
+            ctx.fillStyle = "#fff"; ctx.font = "14px Orbitron"; ctx.fillText("PILOTE: " + (pseudo || "____"), 300, 320);
+            ctx.fillStyle = "#00ff88"; ctx.fillText(">> MODE INFINI <<", 300, 850);
+
+        } else if(state === "GAMEOVER") {
+            ctx.textAlign = "center"; ctx.fillStyle = "#ff4444"; ctx.font = "900 70px Orbitron";
+            ctx.fillText("CRASHED", 300, 450);
+            ctx.fillStyle = "#fff"; ctx.font = "30px Orbitron"; ctx.fillText("SCORE: " + score, 300, 550);
+        } else {
+            // JEU
+            ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
+            obstacles.forEach(o => { ctx.fillRect(0, o.y, o.gap-50, 35); ctx.fillRect(o.gap+50, o.y, 600, 35); });
+            ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
+            ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0; ctx.font = "900 60px Orbitron"; ctx.fillText(score, 40, 90);
+        }
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(update, 1000/60);
     draw();
 </script>
 </body>
