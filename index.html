@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - VINTAGE NEON</title>
+    <title>CYBER DASH - BALANCED</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -11,54 +11,30 @@
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- FENETRES LATERALES REPAREES --- */
-        #left-col, #right-col { 
-            width: 280px; 
-            border: 2px solid #ffffff44; 
-            background: rgba(10, 10, 20, 0.9); 
-            margin: 10px;
-            border-radius: 15px;
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
-        }
+        /* INTERFACE PC */
+        #left-col, #right-col { width: 260px; border: 2px solid #ffffff22; background: rgba(5,5,15,0.9); margin: 10px; border-radius: 15px; display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; }
 
-        .panel-title { padding: 15px; background: rgba(255,255,255,0.05); color: #00f2ff; text-align: center; border-bottom: 1px solid #ffffff22; font-size: 14px; font-weight: 900; border-radius: 13px 13px 0 0; }
-        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; }
-        
-        /* --- ADMIN & SHOP --- */
-        #admin-panel { padding: 15px; display: none; background: rgba(255,0,0,0.1); border-bottom: 1px solid #ff3131; }
-        .admin-txt { color: #ff3131; font-size: 10px; margin-bottom: 10px; font-family: monospace; }
-        #shop-items { padding: 10px; }
-        .shop-item { background: #000; border: 1px solid #ffffff44; padding: 10px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 10px; }
-        .shop-item.owned { border-color: #00f2ff; color: #00f2ff; }
-
-        /* --- ZONE DE JEU --- */
-        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; box-shadow: 0 0 30px #ffffff22; }
+        /* ZONE DE JEU */
+        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; }
 
-        /* --- BOUTONS BLANCS S'INTENSIFIENT --- */
-        .m-btn { 
-            display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; 
-            background: rgba(255,255,255,0.1); border: 3px solid #fff; 
-            border-radius: 50%; z-index: 500; justify-content: center; align-items: center; 
-            font-weight: 900; color: #fff; font-size: 24px; box-shadow: 0 0 15px #ffffff66;
-            transition: all 0.1s;
-        }
-        .m-btn.active { background: #fff; color: #000; box-shadow: 0 0 40px #fff; transform: scale(1.1); }
+        /* BOUTONS MOBILES NEON */
+        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; box-shadow: 0 0 15px #fff; transition: 0.1s; }
+        .m-btn.active { background: #fff; color: #000; box-shadow: 0 0 50px #fff; transform: scale(1.1); }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
 
-        /* --- SCREENS --- */
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; }
+        /* ECRANS UI */
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; }
         .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; background: none; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; transition: 0.3s; }
         .btn-ui:hover { background: #fff; color: #000; }
 
-        /* --- STARS --- */
-        .star-box { font-size: 50px; color: #ffd700; margin: 20px; }
-        .star { opacity: 0; display: inline-block; transform: scale(0.5); transition: 0.5s; }
-        .star.show { opacity: 1; transform: scale(1.2); text-shadow: 0 0 20px #ffd700; }
+        /* ETOILES */
+        .star-box { margin: 20px; display: flex; gap: 10px; }
+        .star { font-size: 50px; color: #ffd700; opacity: 0; transform: scale(0); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .star.pop { opacity: 1; transform: scale(1.2); text-shadow: 0 0 25px #ffd700; }
 
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
@@ -66,9 +42,8 @@
 <body>
 
     <div id="left-col">
-        <div class="panel-title">🏆 CLASSEMENT</div>
-        <div id="leaderboard"></div>
-        <a href="https://www.paypal.me/frsaamya" target="_blank" style="margin:15px; border:1px solid #fff; color:#fff; text-decoration:none; padding:10px; text-align:center; font-size:10px;">☕ DONATION</a>
+        <div class="panel-title">CLASSEMENT</div>
+        <div id="leaderboard" style="padding:10px; font-size:11px; flex-grow:1; color:#00f2ff;"></div>
     </div>
 
     <div id="game-col">
@@ -77,19 +52,19 @@
             <div id="btn-R" class="m-btn">R</div>
 
             <div id="screen-login" class="screen active-screen">
-                <h1 style="font-size:35px; text-shadow: 0 0 15px #fff;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none;">
-                <div class="btn-ui" onclick="init()">ENTRER</div>
+                <h1 style="font-size:30px; letter-spacing:5px;">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="TON PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none; width:70%;">
+                <div class="btn-ui" onclick="init()">JOUER</div>
             </div>
 
             <div id="screen-hub" class="screen">
-                <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px;"></div>
-                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,3fr); gap:10px;"></div>
-                <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">INFINI</div>
+                <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size:14px;"></div>
+                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
+                <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">MODE INFINI</div>
             </div>
 
             <div id="screen-win" class="screen">
-                <h2>NIVEAU RÉUSSI</h2>
+                <h2 style="color:#fff;">NIVEAU RÉUSSI !</h2>
                 <div class="star-box">
                     <span class="star" id="s1">★</span><span class="star" id="s2">★</span><span class="star" id="s3">★</span>
                 </div>
@@ -101,20 +76,15 @@
     </div>
 
     <div id="right-col">
-        <div class="panel-title" onclick="goAdmin()" style="color:#ff3131; cursor:pointer;">🛰️ ADMIN</div>
-        <div id="admin-panel">
-            <div id="admin-info" class="admin-txt"></div>
-            <button onclick="addPoints(1000)" style="width:100%; margin-bottom:5px;">+1000 PTS</button>
-            <button onclick="unlockAll()" style="width:100%;">TOUT DÉBLOQUER</button>
-        </div>
-        <div id="shop">
-            <div class="panel-title" style="border:none;">BOUTIQUE</div>
+        <div class="panel-title">BOUTIQUE</div>
+        <div id="shop" style="flex-grow:1; padding:10px;">
             <div id="shop-items"></div>
-            <div id="user-pts" style="text-align:center; padding:10px; color:#39ff14;">0 PTS</div>
         </div>
+        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:18px;">0 🪙</div>
     </div>
 
 <script>
+    // CONFIGURATION FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -131,14 +101,11 @@
     const ctx = cvs.getContext("2d");
     cvs.width = 600; cvs.height = 1000;
 
-    let user = "", ip = "", points = 0, record = 0, reached = 1, admin = false, currentLvl = 1;
-    let ballX = 300, ballY = 750, obs = [], keys = {}, state = "LOGIN", score = 0;
-    let color = "#fff", owned = ["#fff"];
+    let user = "", ip = "", coins = 0, record = 0, reached = 1, currentLvl = 1;
+    let ballX = 300, ballY = 750, obs = [], pieces = [], keys = {}, state = "LOGIN", score = 0;
+    let ballColor = "#fff", owned = ["#fff"];
 
-    function goAdmin() { if(prompt("CODE:") === "2011") { admin = true; document.getElementById('admin-panel').style.display='block'; setInterval(()=> { document.getElementById('admin-info').innerHTML=`TIME: ${new Date().toLocaleTimeString()}<br>IP: ${ip}`; }, 1000); } }
-    function addPoints(n) { points += n; sync(); }
-    function unlockAll() { reached = 9; sync(); }
-    function sync() { db.ref('users/'+ip).update({points, record, reached, owned, color, user}); }
+    function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, user}); }
 
     function init() {
         user = document.getElementById('nick').value.toUpperCase(); if(!user) return;
@@ -147,40 +114,43 @@
         fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
             ip = d.ip.replace(/\./g, '_');
             db.ref('users/'+ip).on('value', s=>{
-                const v = s.val()||{}; points=v.points||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; color=v.color||"#fff";
-                document.getElementById('hub-stats').innerText = `POINTS: ${points} | BEST: ${record}`;
-                document.getElementById('user-pts').innerText = points + " PTS";
+                const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; ballColor=v.ballColor||"#fff";
+                document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV. MAX: ${reached}`;
+                document.getElementById('user-coins').innerText = `${coins} 🪙`;
                 renderLvls(); renderShop();
             });
         });
-        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
-            let h = ""; s.forEach(x=>{ let p=x.val(); h=`<div style="padding:5px; border-bottom:1px solid #222;">${p.user}: ${p.record}</div>`+h; });
-            document.getElementById('leaderboard').innerHTML = h;
-        });
-    }
-
-    function renderLvls() {
-        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:10px; margin:0; opacity:${i<=reached?1:0.2}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
-        document.getElementById('lvls').innerHTML = h;
     }
 
     function renderShop() {
-        let h = ""; [{n:"CYAN", c:"#00f2ff", p:300}].forEach(i=>{
-            const has = owned.includes(i.c);
-            h += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p})"><span>${i.n}</span><span>${has?'OK':i.p}</span></div>`;
+        let h = ""; [{id:"#00f2ff", n:"NEON", p:100}, {id:"#ff00ff", n:"PINK", p:250}, {id:"#ffd700", n:"GOLD", p:600}].forEach(s => {
+            const isOwned = owned.includes(s.id);
+            h += `<div style="border:1px solid #ffffff22; background:rgba(0,0,0,0.5); padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; font-size:11px; ${isOwned?'border-color:#00f2ff; color:#00f2ff;':''}" onclick="buy('${s.id}',${s.p})">
+                <span>${s.n}</span><span>${isOwned?'POSSÉDÉ':s.p+' 🪙'}</span>
+            </div>`;
         });
         document.getElementById('shop-items').innerHTML = h;
     }
 
-    function buy(c,p) { if(owned.includes(c)) { color=c; sync(); } else if(points>=p) { points-=p; owned.push(c); color=c; sync(); } }
+    function buy(id, p) {
+        if(owned.includes(id)) { ballColor = id; sync(); }
+        else if(coins >= p) { coins -= p; owned.push(id); ballColor = id; sync(); }
+    }
 
-    function start(l) { currentLvl = l; state="PLAY"; score=0; obs=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function renderLvls() {
+        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:18px; margin:0; opacity:${i<=reached?1:0.2}; border-color:${i<=reached?'#fff':'#444'}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
+        document.getElementById('lvls').innerHTML = h;
+    }
 
-    // --- CONTROLES AVEC EFFET INTENSE ---
+    function start(l) { 
+        currentLvl = l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750;
+        document.getElementById('screen-hub').classList.remove('active-screen'); 
+    }
+
     function press(dir, act) { 
         keys[dir] = act; 
         const btn = document.getElementById('btn-'+dir);
-        if(act) btn.classList.add('active'); else btn.classList.remove('active');
+        if(btn) { if(act) btn.classList.add('active'); else btn.classList.remove('active'); }
     }
     window.onkeydown = e => { if(e.key==="ArrowLeft") press("L", true); if(e.key==="ArrowRight") press("R", true); };
     window.onkeyup = e => { if(e.key==="ArrowLeft") press("L", false); if(e.key==="ArrowRight") press("R", false); };
@@ -192,43 +162,65 @@
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            if(keys["L"]) ballX -= 12; if(keys["R"]) ballX += 12;
+            // CALCUL DIFFICULTÉ PROGRESSIVE
+            const speed = (currentLvl === 'INF') ? 8.5 : (4.5 + (currentLvl * 0.9)); 
+            const gapWidth = (currentLvl === 'INF') ? 120 : (170 - (currentLvl * 7)); 
+
+            if(keys["L"]) ballX -= 13; if(keys["R"]) ballX += 13;
             ballX = Math.max(30, Math.min(570, ballX));
 
-            // DIFFICULTÉ RÉPARÉE : Passage large (140px)
-            const isFinishing = (currentLvl !== 'INF' && score >= 15);
-            if(!isFinishing && Math.random() < 0.04) obs.push({g: Math.random()*240+180, y: -50, p: false});
+            const isFinishing = (currentLvl !== 'INF' && score >= 100);
+            
+            if(!isFinishing && Math.random() < 0.04) {
+                let centerGap = Math.random()*(600 - gapWidth - 100) + (gapWidth/2 + 50);
+                obs.push({g: centerGap, y: -50, p: false});
+                if(Math.random() < 0.4) pieces.push({x: centerGap, y: -50});
+            }
             
             obs.forEach(o => {
-                o.y += (currentLvl === 'INF') ? 8 : 6.5 + (currentLvl*0.4); // Plus lent au début !
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
-                ctx.strokeRect(-10, o.y, o.g-140, 20); ctx.strokeRect(o.g+140, o.y, 610, 20);
-                if(o.y > ballY-20 && o.y < ballY+20 && (ballX < o.g-120 || ballX > o.g+120)) {
+                o.y += speed;
+                ctx.strokeStyle = "#fff"; ctx.lineWidth = 5; ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
+                ctx.strokeRect(-10, o.y, o.g - (gapWidth/2), 25); 
+                ctx.strokeRect(o.g + (gapWidth/2), o.y, 610, 25);
+                ctx.shadowBlur = 0;
+
+                if(o.y > ballY-20 && o.y < ballY+25 && (ballX < o.g - (gapWidth/2 - 15) || ballX > o.g + (gapWidth/2 - 15))) {
                     state = "HUB"; document.getElementById('screen-hub').classList.add('active-screen');
-                    points += score; record = Math.max(record, score); sync();
+                    record = Math.max(record, score); sync();
                 }
                 if(o.y > ballY && !o.p) { o.p = true; score++; }
             });
 
-            // CINEMATIQUE FIN
+            pieces.forEach((p, i) => {
+                p.y += speed;
+                ctx.fillStyle = "#ffd700"; ctx.shadowBlur = 15; ctx.shadowColor = "#ffd700";
+                ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                if(Math.hypot(p.x-ballX, p.y-ballY) < 35) { pieces.splice(i, 1); coins++; sync(); }
+            });
+
             if(isFinishing) {
-                ballY -= 6;
-                let g = ctx.createRadialGradient(300, 0, 0, 300, 0, 600);
-                g.addColorStop(0, "white"); g.addColorStop(1, "transparent");
-                ctx.fillStyle = g; ctx.fillRect(0,0,600,1000);
-                if(ballY < 0) {
+                ballY -= 8;
+                let grad = ctx.createLinearGradient(0, 0, 0, 400);
+                grad.addColorStop(0, "rgba(255,255,255,0.8)"); grad.addColorStop(1, "transparent");
+                ctx.fillStyle = grad; ctx.fillRect(0,0,600,500);
+                if(ballY < -50) {
                     state = "WIN"; document.getElementById('screen-win').classList.add('active-screen');
-                    setTimeout(()=>document.getElementById('s1').classList.add('show'), 300);
-                    setTimeout(()=>document.getElementById('s2').classList.add('show'), 600);
-                    setTimeout(()=>document.getElementById('s3').classList.add('show'), 900);
-                    if(currentLvl === reached) reached++; points += 100; sync();
+                    setTimeout(()=>document.getElementById('s1').classList.add('pop'), 200);
+                    setTimeout(()=>document.getElementById('s2').classList.add('pop'), 450);
+                    setTimeout(()=>document.getElementById('s3').classList.add('pop'), 700);
+                    if(currentLvl === reached) reached++; sync();
                 }
             }
 
-            ctx.fillStyle = color; ctx.shadowBlur = 20; ctx.shadowColor = color;
+            // DESSIN BALLE
+            ctx.fillStyle = ballColor; ctx.shadowBlur = 20; ctx.shadowColor = ballColor;
             ctx.beginPath(); ctx.arc(ballX, ballY, 22, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "900 80px Orbitron"; ctx.textAlign = "center";
+            ctx.shadowBlur = 0; 
+            
+            // HUD
+            ctx.fillStyle = "#fff"; ctx.font = "900 85px Orbitron"; ctx.textAlign = "center";
             ctx.fillText(score, 300, 150);
+            ctx.fillStyle = "#ffd700"; ctx.font = "20px Orbitron"; ctx.fillText(coins + " 🪙", 300, 185);
         }
         requestAnimationFrame(loop);
     }
