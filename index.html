@@ -8,40 +8,38 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        * { box-sizing: border-box; touch-action: none; }
-        body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
-        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #app-container { width: 100%; height: 95vh; aspect-ratio: 9/16; position: relative; border: 3px solid #00f2ff; background: #000; overflow: hidden; }
-        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 10; background: rgba(0,0,0,0.9); }
-        .active { display: flex; }
-        input { background: rgba(255,255,255,0.05); border: 2px solid #00f2ff; color: #fff; padding: 15px; font-family: 'Orbitron'; font-size: 18px; text-align: center; width: 90%; outline: none; margin-bottom: 20px; }
-        .btn { border: 2px solid #00f2ff; padding: 15px; cursor: pointer; text-transform: uppercase; font-weight: 900; background: rgba(0, 242, 255, 0.1); color: #00f2ff; width: 90%; margin: 5px 0; }
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
+        body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; width: 100vw; }
         
-        /* BOUTONS L R MOBILE */
-        .mobile-ctrl { display: none; position: absolute; bottom: 40px; width: 80px; height: 80px; border: 3px solid #fff; border-radius: 50%; justify-content: center; align-items: center; font-weight: 900; font-size: 30px; color: #fff; box-shadow: 0 0 15px #fff; z-index: 20; background: rgba(255,255,255,0.1); }
-        #btn-L { left: 30px; }
-        #btn-R { right: 30px; }
-        .mobile-ctrl:active { background: #fff; color: #000; box-shadow: 0 0 30px #fff; }
+        /* Layout Mobile First */
+        #left-col, #right-col { width: 250px; border: 1px solid #00f2ff22; background: #020205; display: flex; flex-direction: column; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #000; position: relative; width: 100%; height: 100%; }
+        
+        #app-container { height: 100%; width: 100%; max-width: 500px; position: relative; background: #000; overflow: hidden; border-left: 1px solid #00f2ff44; border-right: 1px solid #00f2ff44; }
+        canvas { width: 100%; height: 100%; display: block; }
 
-        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
-        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
-        .rank-card { display: flex; justify-content: space-between; padding: 10px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #00f2ff; font-size: 11px; }
-        .log-card { padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 10px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
-        #paypal-btn { position: absolute; bottom: 20px; background: #ffc439; color: #003087; padding: 10px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; font-size: 12px; }
+        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 100; background: rgba(0,0,0,0.95); }
+        .active { display: flex; }
+        input { background: rgba(255,255,255,0.1); border: 2px solid #00f2ff; color: #fff; padding: 15px; font-family: 'Orbitron'; font-size: 18px; text-align: center; width: 80%; margin-bottom: 20px; outline: none; }
+        .btn { border: 2px solid #00f2ff; padding: 15px; cursor: pointer; text-transform: uppercase; font-weight: 900; background: rgba(0, 242, 255, 0.1); color: #00f2ff; width: 80%; margin: 10px 0; }
+        
+        /* Boutons L R Remontés pour ne pas gêner */
+        .mobile-ctrl { display: none; position: absolute; bottom: 20px; width: 75px; height: 75px; border: 3px solid #fff; border-radius: 50%; justify-content: center; align-items: center; font-weight: 900; font-size: 24px; color: #fff; box-shadow: 0 0 15px #fff; z-index: 200; background: rgba(255,255,255,0.1); }
+        #btn-L { left: 15px; }
+        #btn-R { right: 15px; }
 
-        @media (max-width: 1000px) { 
-            #left-col, #right-col { display: none !important; } 
-            .mobile-ctrl { display: flex; } /* On affiche les boutons sur mobile */
+        @media (max-width: 900px) {
+            #left-col, #right-col { display: none; }
+            #app-container { max-width: 100%; border: none; }
+            .mobile-ctrl { display: flex; }
         }
     </style>
 </head>
 <body>
 
     <div id="left-col">
-        <div class="panel-header">🏆 TOP 15 WORLD</div>
-        <div id="leaderboard" class="scroll-list"></div>
+        <div style="padding:15px; text-align:center; border-bottom:1px solid #00f2ff22;">🏆 TOP 15</div>
+        <div id="leaderboard" style="flex-grow:1; overflow-y:auto; padding:10px;"></div>
     </div>
 
     <div id="game-col">
@@ -50,13 +48,13 @@
             <div id="btn-R" class="mobile-ctrl">R</div>
 
             <div id="page-login" class="page active">
-                <h1 style="color:#00f2ff">CYBER DASH</h1>
+                <h1 style="color:#00f2ff; margin-bottom:20px;">CYBER DASH</h1>
                 <input type="text" id="pseudoInput" placeholder="PSEUDO..." maxlength="10">
-                <div class="btn" onclick="validateLogin()">ENTRER</div>
-                <a id="paypal-btn" href="https://paypal.me/votrelien" target="_blank">Soutenir le projet 💳</a>
+                <div class="btn" onclick="validateLogin()">START</div>
             </div>
+
             <div id="page-hub" class="page">
-                <h2 id="welcome-msg" style="color:white">HUB</h2>
+                <h2 id="welcome-msg" style="margin-bottom:20px; color:#fff;"></h2>
                 <div class="btn" onclick="startMode('SAGA')">AVENTURE NIV.<span id="btn-next-lvl">1</span></div>
                 <div class="btn" onclick="startMode('INFINITE')" style="border-color:#ff00ff; color:#ff00ff;">INFINI</div>
             </div>
@@ -65,12 +63,11 @@
     </div>
 
     <div id="right-col">
-        <div class="panel-header">🛰️ LIVE TRACKING</div>
-        <div id="logs" class="scroll-list"></div>
+        <div style="padding:15px; text-align:center; border-bottom:1px solid #00f2ff22;">🛰️ LOGS</div>
+        <div id="logs" style="flex-grow:1; overflow-y:auto; padding:10px; font-size:10px;"></div>
     </div>
 
 <script>
-    // --- FIREBASE CONFIG (Inchangé) ---
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -88,27 +85,11 @@
     canvas.width = 600; canvas.height = 1000;
 
     let pseudo = "", reachedLevel = 1, userIP = "", state = "LOGIN", score = 0, ballX = 300;
-    let obstacles = [], items = [], stars = [], keys = {}, themeColor = "#00f2ff";
-    let lastObstacleY = 400; 
+    let obstacles = [], stars = [], keys = {}, lastObsY = 500;
 
-    for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+    for(let i=0; i<50; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2});
 
-    // --- SYNC DATA ---
-    db.ref('bestScores').on('value', snap => {
-        let entries = []; snap.forEach(c => entries.push(c.val()));
-        entries.sort((a,b) => b.score - a.score);
-        document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `
-            <div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span>${s.score}</span></div>`).join('');
-    });
-
-    db.ref('logs').limitToLast(15).on('value', snap => {
-        let h = ""; snap.forEach(c => {
-            const l = c.val(); let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
-            h = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}</div>` + h;
-        });
-        document.getElementById('logs').innerHTML = h;
-    });
-
+    // --- FIREBASE SYNC ---
     fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
         userIP = d.ip.replace(/\./g, '_');
         db.ref('users/' + userIP).on('value', snap => {
@@ -119,91 +100,94 @@
         });
     });
 
-    // --- NAVIGATION ---
+    db.ref('bestScores').on('value', snap => {
+        let entries = []; snap.forEach(c => entries.push(c.val()));
+        entries.sort((a,b) => b.score - a.score);
+        document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `
+            <div style="padding:8px; margin-bottom:5px; background:rgba(255,255,255,0.05); border-left:2px solid #00f2ff; font-size:11px; display:flex; justify-content:space-between;">
+                <span>#${i+1} ${s.name}</span><span>${s.score}</span>
+            </div>`).join('');
+    });
+
+    function validateLogin() {
+        let v = document.getElementById('pseudoInput').value;
+        if(v.length >= 2) { 
+            pseudo = v.toUpperCase(); 
+            document.getElementById('welcome-msg').innerText = "PILOTE: " + pseudo; 
+            showPage('page-hub'); 
+        }
+    }
+
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         if(id) document.getElementById(id).classList.add('active');
     }
 
-    function validateLogin() {
-        let v = document.getElementById('pseudoInput').value;
-        if(v.length >= 2) { pseudo = v.toUpperCase(); showPage('page-hub'); }
-    }
-
     function startMode(m) {
-        state = m; score = 0; obstacles = []; items = []; ballX = 300; lastObstacleY = 400;
-        showPage(null);
-        db.ref('logs').push({user: pseudo, action: "DÉPART " + m});
+        state = m; score = 0; obstacles = []; ballX = 300; lastObsY = 500; showPage(null);
     }
 
     // --- CONTROLES ---
     window.addEventListener("keydown", e => keys[e.code] = true);
     window.addEventListener("keyup", e => keys[e.code] = false);
 
-    // Gestion Boutons Tactiles
-    const bL = document.getElementById('btn-L');
-    const bR = document.getElementById('btn-R');
+    document.getElementById('btn-L').ontouchstart = (e) => { e.preventDefault(); keys["ArrowLeft"] = true; };
+    document.getElementById('btn-L').ontouchend = () => { keys["ArrowLeft"] = false; };
+    document.getElementById('btn-R').ontouchstart = (e) => { e.preventDefault(); keys["ArrowRight"] = true; };
+    document.getElementById('btn-R').ontouchend = () => { keys["ArrowRight"] = false; };
 
-    bL.addEventListener('touchstart', (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
-    bL.addEventListener('touchend', () => { keys["ArrowLeft"] = false; });
-    bR.addEventListener('touchstart', (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
-    bR.addEventListener('touchend', () => { keys["ArrowRight"] = false; });
-
-    // --- LOOP ---
     function gameLoop() {
-        ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
+        ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
+        
+        // Etoiles
+        ctx.fillStyle = "#fff";
         stars.forEach(s => { 
-            s.y += 1.2; if(s.y > 1000) s.y = 0;
-            ctx.fillStyle = "rgba(255,255,255,0.4)"; ctx.fillRect(s.x, s.y, s.s, s.s);
+            s.y += 1.5; if(s.y > 1000) s.y = 0;
+            ctx.fillRect(s.x, s.y, s.s, s.s);
         });
 
         if(state === "SAGA" || state === "INFINITE") {
-            if(keys["ArrowLeft"] || keys["KeyA"] || keys["KeyQ"]) ballX -= 10;
-            if(keys["ArrowRight"] || keys["KeyD"]) ballX += 10;
+            if(keys["ArrowLeft"] || keys["KeyA"] || keys["KeyQ"]) ballX -= 12;
+            if(keys["ArrowRight"] || keys["KeyD"]) ballX += 12;
             ballX = Math.max(40, Math.min(560, ballX));
 
             let speed = 6 + (reachedLevel * 0.4);
-
-            if(Math.random() < 0.05 && lastObstacleY > 320) {
+            if(Math.random() < 0.05 && lastObsY > 380) {
                 obstacles.push({gap: Math.random()*300+150, y: -50, hit: false});
-                lastObstacleY = 0;
+                lastObsY = 0;
             }
-            lastObstacleY += speed;
-
-            if(Math.random() < 0.01) items.push({x: Math.random()*500+50, y: -50});
-
-            items.forEach((it, i) => {
-                it.y += speed;
-                ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
-                ctx.beginPath(); ctx.arc(it.x, it.y, 12, 0, Math.PI*2); ctx.fill();
-                if(Math.hypot(ballX - it.x, 900 - it.y) < 45) { score += 5; items.splice(i,1); }
-            });
+            lastObsY += speed;
 
             obstacles.forEach(o => {
                 o.y += speed;
                 ctx.fillStyle = (reachedLevel > 5) ? "#39ff14" : "#00f2ff";
                 ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
-                ctx.fillRect(0, o.y, o.gap-110, 35); 
-                ctx.fillRect(o.gap+110, o.y, 600, 35);
+                ctx.fillRect(0, o.y, o.gap-115, 40);
+                ctx.fillRect(o.gap+115, o.y, 600, 40);
 
-                if(o.y > 880 && o.y < 918 && (ballX < o.gap-95 || ballX > o.gap+95)) {
-                    db.ref('logs').push({user: pseudo, action: "CRASH ("+score+")"});
+                // COLLISION (Balle à 800)
+                if(o.y > 770 && o.y < 810 && (ballX < o.gap-95 || ballX > o.gap+95)) {
                     if(state === "INFINITE") db.ref('bestScores/'+userIP).set({name: pseudo, score: score});
                     state = "HUB"; showPage('page-hub');
                 }
                 if(o.y > 1000 && !o.hit) {
                     o.hit = true; score++;
-                    if(state === "SAGA" && score >= reachedLevel * 100) {
+                    if(state === "SAGA" && score >= reachedLevel * 50) {
                         reachedLevel++;
                         db.ref('users/' + userIP).update({reached: reachedLevel});
                         state = "HUB"; showPage('page-hub');
                     }
                 }
             });
+            obstacles = obstacles.filter(o => o.y < 1100);
 
+            // BALLE (Remontée à 800 pour être visible au dessus des pouces)
             ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
-            ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.font = "900 60px Orbitron"; ctx.fillText(score, 40, 90);
+            ctx.beginPath(); ctx.arc(ballX, 800, 24, 0, Math.PI*2); ctx.fill();
+            
+            // SCORE
+            ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "900 60px Orbitron";
+            ctx.textAlign = "center"; ctx.fillText(score, 300, 100);
         }
         requestAnimationFrame(gameLoop);
     }
