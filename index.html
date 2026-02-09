@@ -1,71 +1,32 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>CYBER DASH</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <style>
-        * { box-sizing: border-box; touch-action: none; }
-        body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
-        #left-col, #right-col { width: 250px; border: 1px solid #00f2ff22; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-
-        canvas { height: 95vh; aspect-ratio: 9/16; border: 2px solid #00f2ff; box-shadow: 0 0 20px #00f2ff55; background: #000; }
-
-        /* MENU NIVEAUX */
-        #level-menu {
-            position: absolute; width: 85%; max-height: 70%; overflow-y: auto;
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;
-            background: rgba(0,0,0,0.95); border: 2px solid #00f2ff; border-radius: 15px; z-index: 10;
-        }
-        .level-card {
-            aspect-ratio: 1; border: 2px solid #333; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; cursor: pointer; border-radius: 10px;
-            transition: 0.3s; background: #050510;
-        }
-        .level-card.unlocked { border-color: #00f2ff; }
-        .level-card.locked { opacity: 0.3; cursor: not-allowed; }
-        .stars { color: #ffcc00; font-size: 14px; }
-        
-        #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
-        .panel-header { padding: 10px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
-        
-        /* UI Powerups */
-        #ui-overlay { position: absolute; top: 20px; left: 20px; pointer-events: none; }
-        .badge { padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; font-size: 12px; display: none; }
-
-        @media (max-width: 1000px) {
-            #left-col, #right-col { display: none !important; }
-            canvas { width: 100vw; height: 100vh; border: none; }
-        }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Orbitron', sans-serif; overflow: hidden; display: flex; }
+        #leaderboard-side { width: 200px; border-right: 1px solid #00f2ff; padding: 10px; font-size: 12px; background: rgba(0, 242, 255, 0.05); }
+        #game-container { flex-grow: 1; display: flex; justify-content: center; }
+        canvas { height: 95vh; aspect-ratio: 9/16; border: 2px solid #00f2ff; margin-top: 2.5vh; }
+        #hiddenInput { position: absolute; opacity: 0; pointer-events: none; }
+        .rank { color: #00f2ff; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #222; padding: 3px; }
+        @media (max-width: 800px) { #leaderboard-side { display: none; } }
     </style>
 </head>
 <body>
 
-    <input type="text" id="mobileInput" maxlength="10">
-
-    <div id="left-col">
-        <div class="panel-header">HALL OF FAME</div>
-        <div id="leaderboard" style="overflow-y:auto; flex-grow:1; padding:10px;"></div>
+    <div id="leaderboard-side">
+        <div style="text-align:center; color:#00f2ff; margin-bottom:10px;">🏆 TOP 10</div>
+        <div id="rankList"></div>
     </div>
 
-    <div id="game-col">
+    <div id="game-container">
+        <input type="text" id="hiddenInput" maxlength="10">
         <canvas id="gameCanvas"></canvas>
-        <div id="level-menu" style="display: none;"></div>
-        <div id="ui-overlay">
-            <div id="shield-badge" class="badge" style="background: #00ff00; color: #000;">🛡️ BOUCLIER</div>
-            <div id="slow-badge" class="badge" style="background: #ffff00; color: #000;">⏳ RALENTI</div>
-        </div>
-    </div>
-
-    <div id="right-col">
-        <div class="panel-header">SYSTEM LOGS</div>
-        <div id="logs" style="overflow-y:auto; flex-grow:1; padding:10px; font-size: 10px;"></div>
     </div>
 
     <script>
@@ -81,178 +42,100 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // PROGRESSION
-        let prog = JSON.parse(localStorage.getItem('cyberDashProg')) || { 1: {stars: 0} };
-
-        function initLevelMenu() {
-            const menu = document.getElementById('level-menu');
-            menu.innerHTML = "";
-            for(let i=1; i<=10; i++) {
-                let isUnlocked = (i === 1 || (prog[i-1] && prog[i-1].stars === 3));
-                let stars = prog[i] ? prog[i].stars : 0;
-                let statusClass = isUnlocked ? 'unlocked' : 'locked';
-                let starDraw = isUnlocked ? "★".repeat(stars) + "☆".repeat(3-stars) : "LOCKED 🔒";
-                
-                menu.innerHTML += `<div class="level-card ${statusClass}" onclick="launchLevel(${i}, ${isUnlocked})">
-                    <h3>${i}</h3><div class="stars">${starDraw}</div></div>`;
-            }
-        }
-
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const hInput = document.getElementById("hiddenInput");
         canvas.width = 600; canvas.height = 1000;
 
-        let state = "PSEUDO", pseudo = "", score = 0, ballX = 300, obstacles = [], powerups = [], starsBg = [], keys = {};
-        let currentLvl = null;
-        let activeShield = false, slowMoTimer = 0;
+        let state = "MENU", pseudo = "", score = 0, ballX = 300, obstacles = [], keys = {};
+        let userIP = "unknown";
 
-        for(let i=0; i<50; i++) starsBg.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2});
+        // Récupérer l'IP pour le tri unique
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => userIP = data.ip.replace(/\./g, '_'));
 
-        function launchLevel(n, unlocked) {
-            if(!unlocked) return;
-            currentLvl = { id: n, target: n * 12, speed: 8 + (n * 1.2) };
-            document.getElementById('level-menu').style.display = 'none';
-            resetGameState();
-            state = "PLAYING";
-        }
+        // --- AFFICHAGE CLASSEMENT UNIQUE ---
+        db.ref('leaderboard').orderByChild('score').limitToLast(10).on('value', snap => {
+            let list = [];
+            snap.forEach(child => { list.push(child.val()); });
+            list.sort((a, b) => b.score - a.score);
+            document.getElementById('rankList').innerHTML = list.map((u, i) => 
+                `<div class="rank">#${i+1} ${u.name} : ${u.score}</div>`
+            ).join('');
+        });
 
-        function resetGameState() {
-            score = 0; obstacles = []; powerups = []; ballX = 300;
-            activeShield = false; slowMoTimer = 0;
-            updateBadges();
-        }
+        hInput.addEventListener('input', (e) => {
+            if(state === "MENU") pseudo = e.target.value.toUpperCase();
+        });
 
-        const mInput = document.getElementById('mobileInput');
-        mInput.addEventListener('input', (e) => { if(state === "PSEUDO") pseudo = e.target.value.toUpperCase(); });
+        window.addEventListener("keydown", e => {
+            if(state === "MENU" && e.key === "Enter" && pseudo.length >= 3) state = "PLAYING";
+            keys[e.key] = true;
+        });
+        window.addEventListener("keyup", e => keys[e.key] = false);
 
         canvas.addEventListener("touchstart", e => {
             const r = canvas.getBoundingClientRect();
             const tx = (e.touches[0].clientX - r.left) / r.width * 600;
-            if(state === "PSEUDO") {
-                mInput.focus();
-                if(pseudo.length >= 3 && tx > 200 && tx < 400) {
-                    state = "MENU_LEVEL";
-                    document.getElementById('level-menu').style.display = 'grid';
-                    initLevelMenu();
-                }
-            } else if(state === "GAMEOVER" || state === "WIN") {
-                state = "MENU_LEVEL";
-                document.getElementById('level-menu').style.display = 'grid';
-                initLevelMenu();
+            if(state === "MENU") {
+                hInput.focus();
+                if(pseudo.length >= 3 && tx > 200 && tx < 400) state = "PLAYING";
+            } else if(state === "GAMEOVER") {
+                location.reload();
             } else {
-                if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true;
+                if(tx < 300) { keys["ArrowLeft"] = true; keys["ArrowRight"] = false; }
+                else { keys["ArrowRight"] = true; keys["ArrowLeft"] = false; }
             }
         });
+
         canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
 
         function update() {
-            starsBg.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
             if(state !== "PLAYING") return;
+            if(keys["ArrowLeft"]) ballX -= 10;
+            if(keys["ArrowRight"]) ballX += 10;
+            ballX = Math.max(20, Math.min(580, ballX));
 
-            if(slowMoTimer > 0) slowMoTimer--;
-            updateBadges();
-
-            let moveSpeed = 12;
-            if(keys["ArrowLeft"]) ballX -= moveSpeed;
-            if(keys["ArrowRight"]) ballX += moveSpeed;
-            ballX = Math.max(30, Math.min(570, ballX));
-
-            // Spawn Obstacles
-            if(Math.random() < 0.06) {
-                let w = Math.max(150, 420 - (currentLvl.id * 15));
-                obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
-            }
-            // Spawn Powerups
-            if(Math.random() < 0.005) {
-                let type = Math.random() < 0.5 ? 'shield' : 'slowmo';
-                powerups.push({x: Math.random()*540+30, y: -50, type: type});
+            if(Math.random() < 0.05) {
+                obstacles.push({x: Math.random()*400, y: -50, w: 200});
             }
 
-            let fallSpeed = slowMoTimer > 0 ? currentLvl.speed / 2 : currentLvl.speed;
-
-            obstacles.forEach(o => {
-                o.y += fallSpeed;
+            obstacles.forEach((o, i) => {
+                o.y += 8;
                 if(o.y > 880 && o.y < 920 && !(ballX > o.x && ballX < o.x + o.w)) {
-                    if(activeShield) {
-                        activeShield = false;
-                        o.y = 1100;
-                    } else {
-                        state = "GAMEOVER";
-                        saveScoreToFirebase(pseudo, score);
-                    }
+                    state = "GAMEOVER";
+                    // ENREGISTREMENT UNIQUE PAR IP
+                    const userRef = db.ref('leaderboard/' + userIP);
+                    userRef.once('value', (snap) => {
+                        if(!snap.exists() || snap.val().score < score) {
+                            userRef.set({name: pseudo, score: score});
+                        }
+                    });
                 }
-                if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score >= currentLvl.target) winLevel(); }
+                if(o.y > 1000) { obstacles.splice(i, 1); score++; }
             });
-
-            powerups.forEach((p, i) => {
-                p.y += fallSpeed;
-                if(Math.hypot(p.x - ballX, p.y - 900) < 40) {
-                    if(p.type === 'shield') activeShield = true;
-                    else slowMoTimer = 300;
-                    powerups.splice(i, 1);
-                }
-            });
-            
-            obstacles = obstacles.filter(o => o.y < 1050);
-            powerups = powerups.filter(p => p.y < 1050);
-        }
-
-        function winLevel() {
-            state = "WIN";
-            prog[currentLvl.id] = { stars: 3 };
-            localStorage.setItem('cyberDashProg', JSON.stringify(prog));
-        }
-
-        function updateBadges() {
-            document.getElementById('shield-badge').style.display = activeShield ? 'block' : 'none';
-            document.getElementById('slow-badge').style.display = slowMoTimer > 0 ? 'block' : 'none';
         }
 
         function draw() {
-            ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-            ctx.fillStyle = "#fff"; starsBg.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
-
-            if(state === "PSEUDO") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
-                ctx.fillText("CYBER DASH", 300, 350);
-                ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron";
-                ctx.fillText("PILOTE: " + (pseudo || "____"), 300, 500);
+            ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
+            if(state === "MENU") {
+                ctx.fillStyle = "#00f2ff"; ctx.font = "60px Orbitron"; ctx.textAlign = "center";
+                ctx.fillText("CYBER DASH", 300, 400);
+                ctx.font = "25px Orbitron"; ctx.fillText("CLIQUE ICI ET TAPE TON NOM", 300, 480);
+                ctx.font = "40px Orbitron"; ctx.fillText(pseudo || "____", 300, 550);
             } else if(state === "PLAYING") {
-                ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
+                ctx.fillStyle = "#00f2ff";
                 obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 30); ctx.fillRect(o.x+o.w, o.y, 600, 30); });
-                
-                powerups.forEach(p => {
-                    ctx.fillStyle = p.type === 'shield' ? "#0f0" : "#ff0";
-                    ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI*2); ctx.fill();
-                });
-
-                ctx.shadowBlur = 20; ctx.shadowColor = activeShield ? "#0f0" : "#fff";
-                ctx.fillStyle = activeShield ? "#0f0" : "#fff";
-                ctx.beginPath(); ctx.arc(ballX, 900, 20, 0, Math.PI*2); ctx.fill();
-                
-                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "900 50px Orbitron";
-                ctx.fillText(score + " / " + currentLvl.target, 300, 100);
-            } else if(state === "WIN") {
-                ctx.fillStyle = "#0f8"; ctx.font = "900 60px Orbitron"; ctx.textAlign = "center";
-                ctx.fillText("LEVEL CLEAR", 300, 450);
-                ctx.font = "20px Orbitron"; ctx.fillText("SUIVANT DÉBLOQUÉ ★★★", 300, 520);
+                ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ballX, 900, 20, 0, Math.PI*2); ctx.fill();
+                ctx.font = "50px Orbitron"; ctx.textAlign = "left"; ctx.fillText(score, 50, 80);
             } else if(state === "GAMEOVER") {
-                ctx.fillStyle = "#f04"; ctx.font = "900 70px Orbitron"; ctx.textAlign = "center";
-                ctx.fillText("CRASHED", 300, 450);
+                ctx.fillStyle = "red"; ctx.font = "60px Orbitron"; ctx.textAlign = "center";
+                ctx.fillText("GAME OVER", 300, 500);
+                ctx.font = "20px Orbitron"; ctx.fillStyle = "#fff"; ctx.fillText("TOUCHER POUR RECOMMENCER", 300, 580);
             }
             requestAnimationFrame(draw);
         }
-
-        function saveScoreToFirebase(p, s) {
-            if(!p) return;
-            db.ref('bestScores/' + p.replace(/\W/g, '')).set({ name: p, score: s });
-        }
-
-        db.ref('bestScores').orderByChild('score').limitToLast(10).on('value', s => {
-            let h = ""; s.forEach(c => { h = `<div style="padding:5px; border-bottom:1px solid #333; font-size:11px;"><b>${c.val().name}</b>: ${c.val().score}</div>` + h; });
-            document.getElementById('leaderboard').innerHTML = h;
-        });
-
         setInterval(update, 1000/60);
         draw();
     </script>
