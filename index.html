@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH</title>
+    <title>CYBER DASH - SAGA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -11,24 +11,28 @@
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
-        #app-container { 
-            height: 90vh; /* On réduit un peu la taille pour être sûr que rien n'est coupé */
-            aspect-ratio: 9/16; 
-            position: relative; 
-            border: 2px solid #00f2ff; 
-            background: #000; 
-            overflow: hidden; 
-        }
+        #app-container { height: 95vh; aspect-ratio: 9/16; position: relative; border: 2px solid #00f2ff; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
 
-        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 100; background: rgba(0,0,0,0.9); }
+        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 100; background: rgba(0,0,0,0.95); }
         .active { display: flex; }
+
+        /* Grille des niveaux */
+        .level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; width: 90%; }
+        .lvl-card { background: rgba(0, 242, 255, 0.05); border: 2px solid #333; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
+        .lvl-card.unlocked { border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        .lvl-card.locked { opacity: 0.3; cursor: default; }
+        .lvl-card .stars { font-size: 10px; color: #444; margin-top: 5px; letter-spacing: 2px; }
+        .star-on { color: #ff0 !important; text-shadow: 0 0 5px #ff0; }
+        
         .btn { border: 2px solid #00f2ff; padding: 15px; cursor: pointer; text-transform: uppercase; font-weight: 900; background: rgba(0, 242, 255, 0.1); color: #00f2ff; width: 80%; margin: 10px 0; text-align: center; }
         
-        /* Boutons L R très visibles */
-        .mobile-ctrl { position: absolute; bottom: 20px; width: 70px; height: 70px; border: 3px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 24px; color: #fff; box-shadow: 0 0 15px #fff; z-index: 200; background: rgba(255,255,255,0.2); }
-        #btn-L { left: 20px; }
-        #btn-R { right: 20px; }
+        .mobile-ctrl { position: absolute; bottom: 30px; width: 80px; height: 80px; border: 3px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 28px; color: #fff; box-shadow: 0 0 15px #fff; z-index: 200; background: rgba(255,255,255,0.1); }
+        #btn-L { left: 25px; } #btn-R { right: 25px; }
+        .mobile-ctrl:active { background: #fff; color: #000; box-shadow: 0 0 40px #fff; }
+
+        #victory-overlay { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 150; background: rgba(0,0,0,0.8); pointer-events: none; }
+        .big-stars { font-size: 50px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -37,16 +41,23 @@
         <div id="btn-L" class="mobile-ctrl">L</div>
         <div id="btn-R" class="mobile-ctrl">R</div>
 
+        <div id="victory-overlay">
+            <h1 id="victory-text" style="color: #fff; font-size: 24px;">NIVEAU RÉUSSI !</h1>
+            <div id="victory-stars" class="big-stars"></div>
+        </div>
+
         <div id="page-login" class="page active">
             <h1 style="color:#00f2ff; margin-bottom:20px;">CYBER DASH</h1>
-            <input type="text" id="pseudoInput" placeholder="PSEUDO..." style="padding:10px; margin-bottom:10px; text-align:center;">
+            <input type="text" id="pseudoInput" placeholder="PSEUDO..." style="padding:10px; text-align:center; background:transparent; border:1px solid #00f2ff; color:white; outline:none;">
             <div class="btn" onclick="validateLogin()">START</div>
         </div>
 
         <div id="page-hub" class="page">
-            <h2 id="welcome-msg" style="margin-bottom:20px;"></h2>
-            <div class="btn" onclick="startMode('SAGA')">JOUER</div>
+            <h2 id="welcome-msg" style="font-size: 18px; color: #00f2ff;"></h2>
+            <div class="level-grid" id="levelGrid"></div>
+            <div class="btn" onclick="startMode('INFINITE')" style="border-color:#ff00ff; color:#ff00ff; margin-top:30px;">MODE INFINI</div>
         </div>
+
         <canvas id="gameCanvas"></canvas>
     </div>
 
@@ -67,23 +78,68 @@
     const ctx = canvas.getContext("2d");
     canvas.width = 600; canvas.height = 1000;
 
-    let pseudo = "", state = "LOGIN", score = 0, ballX = 300, obstacles = [], keys = {}, lastObsY = 500;
+    let pseudo = "", userIP = "", state = "LOGIN", mode = "", score = 0, ballX = 300, ballY = 700;
+    let reachedLevel = 1, levelStats = {}, obstacles = [], starsBG = [], keys = {};
+    let lastObsY = 500, currentLvl = 1;
+
+    for(let i=0; i<60; i++) starsBG.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2});
+
+    function loadProgress() {
+        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+            userIP = d.ip.replace(/\./g, '_');
+            db.ref('users/' + userIP).on('value', snap => {
+                if(snap.exists()){
+                    const data = snap.val();
+                    reachedLevel = data.reached || 1;
+                    levelStats = data.stats || {};
+                }
+                renderLevels();
+            });
+        });
+    }
+
+    function renderLevels() {
+        let html = "";
+        for(let i=1; i<=9; i++) {
+            let bestScore = levelStats[i] || 0;
+            let starsNum = bestScore >= 50 ? 3 : (bestScore >= 35 ? 2 : (bestScore >= 15 ? 1 : 0));
+            let isUnlocked = i <= reachedLevel;
+            let statusClass = isUnlocked ? "unlocked" : "locked";
+            
+            let starsHTML = "";
+            for(let s=1; s<=3; s++) starsHTML += `<span class="${s <= starsNum ? 'star-on' : ''}">★</span>`;
+
+            html += `<div class="lvl-card ${statusClass}" onclick="chooseLevel(${i}, ${isUnlocked})">
+                        <div style="font-size:10px">NIV</div>
+                        <div style="font-size:20px; font-weight:900">${i}</div>
+                        <div class="stars">${starsHTML}</div>
+                     </div>`;
+        }
+        document.getElementById('levelGrid').innerHTML = html;
+    }
 
     function validateLogin() {
         pseudo = document.getElementById('pseudoInput').value.toUpperCase();
         if(pseudo.length > 1) { 
-            document.getElementById('welcome-msg').innerText = pseudo;
+            document.getElementById('welcome-msg').innerText = "PILOTE: " + pseudo;
             document.getElementById('page-login').classList.remove('active');
             document.getElementById('page-hub').classList.add('active');
+            loadProgress();
         }
     }
 
-    function startMode() {
-        state = "PLAY"; score = 0; obstacles = []; ballX = 300;
-        document.getElementById('page-hub').classList.remove('active');
+    function chooseLevel(lvl, unlocked) {
+        if(!unlocked) return;
+        currentLvl = lvl;
+        startMode('SAGA');
     }
 
-    // Contrôles tactiles
+    function startMode(m) {
+        mode = m; state = "PLAY"; score = 0; obstacles = []; ballX = 300; ballY = 700;
+        document.getElementById('page-hub').classList.remove('active');
+        document.getElementById('victory-overlay').style.display = 'none';
+    }
+
     document.getElementById('btn-L').ontouchstart = (e) => { e.preventDefault(); keys["L"] = true; };
     document.getElementById('btn-L').ontouchend = () => { keys["L"] = false; };
     document.getElementById('btn-R').ontouchstart = (e) => { e.preventDefault(); keys["R"] = true; };
@@ -91,47 +147,76 @@
 
     function gameLoop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
+        starsBG.forEach(s => { 
+            if(state !== "VICTORY") s.y += 1.5; if(s.y > 1000) s.y = 0;
+            ctx.fillStyle = "#fff"; ctx.fillRect(s.x, s.y, s.s, s.s);
+        });
 
         if(state === "PLAY") {
-            if(keys["L"]) ballX -= 12;
-            if(keys["R"]) ballX += 12;
+            if(keys["L"]) ballX -= 8; if(keys["R"]) ballX += 8;
             ballX = Math.max(40, Math.min(560, ballX));
 
-            if(Math.random() < 0.05 && lastObsY > 350) {
-                obstacles.push({gap: Math.random()*300+150, y: -50});
+            let speed = 7 + (currentLvl * 0.3);
+            if(Math.random() < 0.05 && lastObsY > 380) {
+                obstacles.push({gap: Math.random()*300+150, y: -50, passed: false});
                 lastObsY = 0;
             }
-            lastObsY += 8;
+            lastObsY += speed;
 
-            obstacles.forEach((o, i) => {
-                o.y += 8;
-                ctx.fillStyle = "#00f2ff";
-                ctx.fillRect(0, o.y, o.gap-110, 40);
-                ctx.fillRect(o.gap+110, o.y, 600, 40);
-
-                // COLLISION (Balle à 700px de haut maintenant !)
-                if(o.y > 670 && o.y < 730 && (ballX < o.gap-95 || ballX > o.gap+95)) {
-                    state = "LOGIN"; 
-                    document.getElementById('page-hub').classList.add('active');
+            obstacles.forEach(o => {
+                o.y += speed;
+                ctx.fillStyle = "#00f2ff"; ctx.fillRect(0, o.y, o.gap-110, 40); ctx.fillRect(o.gap+110, o.y, 600, 40);
+                if(o.y > ballY-30 && o.y < ballY+30 && (ballX < o.gap-90 || ballX > o.gap+90)) {
+                    state = "LOGIN"; document.getElementById('page-hub').classList.add('active');
                 }
-                if(o.y > 710 && !o.passed) { o.passed = true; score++; }
+                if(o.y > ballY && !o.passed) { 
+                    o.passed = true; score++; 
+                    if(mode === "SAGA" && score >= 50) triggerVictory();
+                }
             });
             obstacles = obstacles.filter(o => o.y < 1100);
+        }
 
-            // DESSIN DE LA BALLE (BLANCHE ET LUMINEUSE)
-            ctx.shadowBlur = 30; ctx.shadowColor = "#fff";
-            ctx.fillStyle = "#fff";
-            ctx.beginPath(); 
-            ctx.arc(ballX, 700, 25, 0, Math.PI*2); // Position 700 = Bien visible
-            ctx.fill();
-            ctx.shadowBlur = 0;
+        if(state === "VICTORY") {
+            ballY -= 7;
+            if(ballY < -100) {
+                state = "LOGIN"; 
+                document.getElementById('page-hub').classList.add('active');
+                renderLevels();
+            }
+        }
 
-            ctx.font = "900 80px Orbitron";
-            ctx.textAlign = "center";
-            ctx.fillText(score, 300, 150);
+        ctx.fillStyle = "#fff"; ctx.shadowBlur = 20; ctx.shadowColor = "#fff";
+        ctx.beginPath(); ctx.arc(ballX, ballY, 24, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        if(state === "PLAY") {
+            ctx.font = "900 70px Orbitron"; ctx.textAlign = "center";
+            ctx.fillText(score, 300, 120);
         }
         requestAnimationFrame(gameLoop);
     }
+
+    function triggerVictory() {
+        state = "VICTORY";
+        let starsWon = score >= 50 ? 3 : (score >= 35 ? 2 : 1);
+        
+        // Update Firebase
+        let newReached = reachedLevel;
+        if(score >= 35 && currentLvl === reachedLevel) newReached = currentLvl + 1;
+        
+        db.ref('users/' + userIP).update({
+            reached: newReached,
+            [`stats/${currentLvl}`]: score
+        });
+
+        // Overlay
+        let sHTML = "";
+        for(let i=1; i<=3; i++) sHTML += `<span style="color:${i<=starsWon?'#ff0':'#333'}">★</span>`;
+        document.getElementById('victory-stars').innerHTML = sHTML;
+        document.getElementById('victory-overlay').style.display = 'flex';
+    }
+
     gameLoop();
 </script>
 </body>
