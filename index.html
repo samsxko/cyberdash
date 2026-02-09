@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - FINAL VERSION</title>
+    <title>CYBER DASH - FINAL OP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,37 +12,32 @@
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         #left-col, #right-col { width: 280px; border: 2px solid #ffffff22; background: rgba(5,5,20,0.98); margin: 10px; border-radius: 15px; display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; letter-spacing: 2px; cursor: pointer; }
+        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; letter-spacing: 2px; }
         #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; }
         .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; padding: 20px; }
         .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; transition: 0.2s; }
-        
+        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; }
         .btn-infini-event {
             position: relative; background: linear-gradient(135deg, #ff007f, #ff66b2, #99004d);
-            border: none; color: white; padding: 20px; font-weight: 900;
-            margin-top: 25px; width: 85%; cursor: pointer;
+            border: none; color: white; padding: 20px; font-weight: 900; margin-top: 25px; width: 85%; cursor: pointer;
             box-shadow: 0 0 15px #ff007f; border-radius: 10px;
         }
-        .btn-infini-event::before { content: '❤️'; position: absolute; top: -10px; left: -10px; transform: rotate(-20deg); font-size: 20px; }
-        .btn-infini-event::after { content: '❤️'; position: absolute; bottom: -10px; right: -10px; transform: rotate(20deg); font-size: 20px; }
+        .btn-infini-event::before, .btn-infini-event::after { content: '❤️'; position: absolute; font-size: 20px; }
+        .btn-infini-event::before { top: -10px; left: -10px; transform: rotate(-20deg); }
+        .btn-infini-event::after { bottom: -10px; right: -10px; transform: rotate(20deg); }
         .event-tag { display: block; font-size: 10px; background: white; color: #ff007f; width: fit-content; margin: 0 auto 5px; padding: 2px 8px; border-radius: 20px; }
-
         .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff11; font-size: 11px; }
         .buy-btn { background: #00f2ff; color: #000; border: none; padding: 7px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
         #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:24px; }
-        
-        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
+        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; font-size: 20px; }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
 </head>
 <body>
-
     <div id="left-col"><div class="panel-title">CLASSEMENT</div><div id="leaderboard" class="scroll-zone"></div></div>
-
     <div id="game-col">
         <div id="container">
             <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
@@ -56,16 +51,11 @@
                 <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
                 <button class="btn-infini-event" onclick="start('INF')"><span class="event-tag">EVENT</span>MODE INFINI</button>
             </div>
-            <div id="screen-win" class="screen"><h2 style="color:#ffd700">VICTOIRE</h2><div class="btn-ui" onclick="closeWin()">HUB</div></div>
+            <div id="screen-win" class="screen"><h2 style="color:#ffd700">MISSION RÉUSSIE</h2><div class="btn-ui" onclick="closeWin()">RETOUR</div></div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
-
-    <div id="right-col">
-        <div class="panel-title">BOUTIQUE</div>
-        <div id="shop" class="scroll-zone"></div>
-        <div id="user-coins">0 🪙</div>
-    </div>
+    <div id="right-col"><div class="panel-title">BOUTIQUE</div><div id="shop" class="scroll-zone"></div><div id="user-coins">0 🪙</div></div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0", authDomain: "cyberdash-2baf5.firebaseapp.com", databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app", projectId: "cyberdash-2baf5", storageBucket: "cyberdash-2baf5.firebasestorage.app", messagingSenderId: "360233647601", appId: "1:360233647601:web:60aa25f439019ed7511850" };
@@ -73,12 +63,12 @@
     const db = firebase.database();
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
     
-    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], stars=[], keys={}, state="LOGIN", score=0;
-    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"];
+    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], stars=[], keys={}, state="LOGIN", score=0, ballTilt=0;
+    let ballColor="#fff", owned=["#fff"];
 
     for(let i=0; i<80; i++) stars.push({x:Math.random()*600, y:Math.random()*1000, s:Math.random()*2});
 
-    function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentTrail, user}); }
+    function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, user}); }
     
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
@@ -88,40 +78,27 @@
             ip = d.ip.replace(/\./g, '_');
             db.ref('users/'+ip).on('value', s=>{
                 const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; 
-                owned=v.owned||["#fff", "none"]; ballColor=v.ballColor||"#fff"; currentTrail=v.currentTrail||"none";
+                owned=v.owned||["#fff"]; ballColor=v.ballColor||"#fff";
                 document.getElementById('user-coins').innerText = `${coins} 🪙`;
                 document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV: ${reached}`;
                 renderLvls(); renderShop();
             });
         });
+        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
+            let h=""; s.forEach(x=>{ let p=x.val(); h=`<div class="item-list"><span>${p.user||'ANONYME'}</span><b>${p.record||0}</b></div>`+h; });
+            document.getElementById('leaderboard').innerHTML=h;
+        });
     }
 
     function renderShop() {
-        const items = [
-            {id:"#fff", n:"BASIQUE", p:0}, {id:"#00f2ff", n:"NEON", p:200}, {id:"#ff00ff", n:"PINK", p:500}, 
-            {id:"#ffd700", n:"OR", p:5000}, {id:"poudre", n:"POUDRE", p:300}, {id:"flame", n:"FEU", p:1000}
-        ];
-        let h = "";
-        items.forEach(s => { 
-            const isO=owned.includes(s.id); 
-            const isEq = (ballColor===s.id || currentTrail===s.id);
-            h += `<div class="item-list"><span>${s.n}</span><button class="buy-btn" onclick="buy('${s.id}',${s.p})">${isO?(isEq?'EQUIPÉ':'CHOISIR'):s.p+' 🪙'}</button></div>`; 
-        });
+        const items = [{id:"#fff", n:"BASIQUE", p:0}, {id:"#00f2ff", n:"NEON", p:200}, {id:"#ff00ff", n:"PINK", p:500}, {id:"#9b59b6", n:"AMÉTHYSTE", p:1500}, {id:"#e67e22", n:"LAVE", p:3000}, {id:"#ffd700", n:"OR PUR", p:5000}, {id:"#555", n:"OBSIDIENNE", p:8000}];
+        let h = ""; items.forEach(s => { const isO=owned.includes(s.id); h += `<div class="item-list"><span>${s.n}</span><button class="buy-btn" onclick="buy('${s.id}',${s.p})">${isO?(ballColor===s.id?'EQUIPÉ':'CHOISIR'):s.p+' 🪙'}</button></div>`; });
         document.getElementById('shop').innerHTML = h;
     }
 
-    function buy(id, p) { 
-        if(owned.includes(id)) { if(id.startsWith('#')) ballColor=id; else currentTrail=id; }
-        else if(coins >= p) { coins -= p; owned.push(id); if(id.startsWith('#')) ballColor=id; else currentTrail=id; }
-        sync(); renderShop();
-    }
-
-    function renderLvls() { 
-        let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } 
-        document.getElementById('lvls').innerHTML=h; 
-    }
-
-    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function buy(id, p) { if(owned.includes(id)) ballColor=id; else if(coins >= p) { coins -= p; owned.push(id); ballColor=id; } sync(); renderShop(); }
+    function renderLvls() { let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } document.getElementById('lvls').innerHTML=h; }
+    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750; ballTilt=0; document.getElementById('screen-hub').classList.remove('active-screen'); }
     function closeWin() { document.getElementById('screen-win').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); }
 
     window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
@@ -137,7 +114,10 @@
             const speed = (currentLvl==='INF') ? 7.5 : 4 + (currentLvl*0.4);
             const gap = (currentLvl==='INF') ? 140 : 190 - (currentLvl*5);
 
-            if(keys["L"]) ballX-=10; if(keys["R"]) ballX+=10; ballX=Math.max(25,Math.min(575,ballX));
+            if(keys["L"]) { ballX-=11; ballTilt = Math.max(ballTilt-0.05, -0.35); } 
+            else if(keys["R"]) { ballX+=11; ballTilt = Math.min(ballTilt+0.05, 0.35); } 
+            else { ballTilt *= 0.85; }
+            ballX=Math.max(25,Math.min(575,ballX));
 
             if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
                 let c=Math.random()*(600-gap-100)+(gap/2+50);
@@ -151,23 +131,24 @@
                 ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke();
                 ctx.shadowBlur = 0;
                 if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { 
-                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); sync(); 
+                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); 
                 }
                 if(o.y > ballY && !o.p) { o.p=true; score++; }
             });
 
             pieces.forEach((p,i)=>{ 
                 p.y+=speed; 
-                if(currentLvl==='INF') {
-                    ctx.fillStyle="#ff0044"; ctx.font="20px Arial"; ctx.fillText("❤️", p.x-10, p.y+5);
-                } else {
-                    ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill();
-                }
+                if(currentLvl==='INF') { ctx.fillStyle="#ff0044"; ctx.font="24px Arial"; ctx.fillText("❤️", p.x-12, p.y+8); } 
+                else { ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill(); }
                 if(Math.hypot(p.x-ballX,p.y-ballY)<35){ pieces.splice(i,1); coins++; sync(); } 
             });
 
+            ctx.save(); ctx.translate(ballX, ballY); ctx.rotate(ballTilt);
             ctx.shadowBlur = 20; ctx.shadowColor = ballColor; ctx.fillStyle=ballColor;
-            ctx.beginPath(); ctx.arc(ballX,ballY,22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle="rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(-6,-6,5,0,Math.PI*2); ctx.fill();
+            ctx.restore(); ctx.shadowBlur = 0;
+            
             ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,160);
         }
         requestAnimationFrame(loop);
