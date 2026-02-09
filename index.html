@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - ORIGINAL SENSATIONS</title>
+    <title>CYBER DASH - ORIGINAL FEEL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,63 +12,71 @@
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
         /* Colonnes PC */
-        #left-col, #right-col { width: 280px; border: 1px solid #222; background: #050505; display: flex; flex-direction: column; z-index: 10; }
+        #left-col, #right-col { width: 260px; border: 1px solid #222; background: #050505; display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        .title { padding: 15px; color: #00f2ff; font-size: 12px; text-align: center; border-bottom: 1px solid #222; font-weight: 900; }
-        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; color: #888; }
-        
-        .paypal-box { padding: 15px; border-top: 1px solid #222; text-align: center; }
-        .paypal-link { color: #ffc439; text-decoration: none; font-size: 11px; border: 1px solid #ffc439; padding: 8px; display: block; border-radius: 5px; }
+        .title { padding: 12px; color: #00f2ff; font-size: 11px; text-align: center; border-bottom: 1px solid #222; font-weight: 900; }
+        #leaderboard { flex-grow: 1; padding: 10px; font-size: 10px; overflow-y: auto; color: #777; }
+        .paypal-link { color: #ffc439; text-decoration: none; font-size: 10px; border: 1px solid #ffc439; padding: 8px; display: block; border-radius: 5px; margin: 10px; text-align: center;}
 
-        #logs { height: 30%; border-bottom: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 9px; color: #444; font-family: monospace; }
-        #shop { height: 70%; padding: 10px; overflow-y: auto; }
+        #logs { height: 25%; border-bottom: 1px solid #222; overflow-y: auto; padding: 8px; font-size: 9px; color: #444; }
+        #shop { height: 75%; padding: 10px; overflow-y: auto; }
         .shop-item { background: #111; border: 1px solid #222; padding: 8px; margin-bottom: 5px; border-radius: 4px; font-size: 10px; text-align: center; cursor: pointer; }
         .owned { border-color: #39ff14 !important; color: #39ff14; }
 
         /* Zone de Jeu */
-        #container { height: 95vh; aspect-ratio: 9/16; position: relative; border: 2px solid #333; background: #000; }
+        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 2px solid #333; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; }
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; }
-        .active { display: flex !important; }
-        .btn-ui { border: 2px solid #00f2ff; padding: 15px 30px; color: #00f2ff; cursor: pointer; font-weight: 900; margin-top: 20px; }
+        
+        /* Gros Boutons Mobiles */
+        .m-btn { 
+            display: none; position: absolute; bottom: 20px; width: 90px; height: 90px; 
+            background: rgba(0,242,255,0.1); border: 2px solid rgba(0,242,255,0.3); 
+            border-radius: 50%; z-index: 500; justify-content: center; align-items: center; 
+            font-weight: 900; color: #00f2ff;
+        }
+        #btn-L { left: 15px; }
+        #btn-R { right: 15px; }
 
-        @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } }
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; }
+        .active { display: flex !important; }
+        .btn-ui { border: 2px solid #00f2ff; padding: 12px 25px; color: #00f2ff; cursor: pointer; font-weight: 900; margin-top: 15px; font-size: 14px; }
+
+        @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; } .m-btn { display: flex; } }
     </style>
 </head>
 <body>
 
     <div id="left-col">
-        <div class="title">🏆 RECORDS</div>
+        <div class="title">TOP SCORES</div>
         <div id="leaderboard">Chargement...</div>
-        <div class="paypal-box">
-            <a href="https://www.paypal.me/frsaamya" target="_blank" class="paypal-link">☕ Buy me a coffee</a>
-        </div>
+        <a href="https://www.paypal.me/frsaamya" target="_blank" class="paypal-link">Soutenir le projet</a>
     </div>
 
     <div id="game-col">
         <div id="container">
+            <div id="btn-L" class="m-btn">L</div>
+            <div id="btn-R" class="m-btn">R</div>
+
             <div id="screen-login" class="screen active">
-                <h1 style="color:#00f2ff; font-size:30px;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:20px; padding:10px; background:none; border:1px solid #00f2ff; color:#fff; text-align:center; font-family:'Orbitron';">
-                <div class="btn-ui" onclick="init()">JOUER</div>
+                <h1 style="color:#00f2ff; font-size:24px;">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:15px; padding:10px; background:none; border:1px solid #00f2ff; color:#fff; text-align:center; font-family:'Orbitron';">
+                <div class="btn-ui" onclick="init()">START</div>
             </div>
             <div id="screen-hub" class="screen">
-                <div id="stats" style="color:#ffc439; margin-bottom:10px;">Points: 0</div>
+                <div id="stats" style="color:#ffc439; margin-bottom:10px; font-size:12px;">Points: 0</div>
                 <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
-                <div class="btn-ui" onclick="start('INF')">INFINI</div>
+                <div class="btn-ui" onclick="start()">INFINI</div>
             </div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
 
     <div id="right-col">
-        <div id="admin-btn" class="title" style="color:#ff3131; cursor:pointer;" onclick="goAdmin()">ADMIN</div>
+        <div class="title" style="color:#ff3131; cursor:pointer;" onclick="goAdmin()">ADMIN</div>
         <div id="logs"></div>
         <div id="shop">
-            <div class="title" style="border:none; padding:5px;">BOUTIQUE</div>
             <div id="shop-items"></div>
-            <div id="current-pts" style="text-align:center; color:#00f2ff; font-size:12px; margin-top:10px;">Pts: 0</div>
         </div>
     </div>
 
@@ -93,12 +101,8 @@
     let ballX = 300, obs = [], keys = {}, state = "LOGIN", score = 0;
     let color = "#fff", owned = ["#fff"];
 
-    const items = [
-        {n:"Cyan", p:200, c:"#00f2ff"}, {n:"Neon", p:500, c:"#39ff14"}, {n:"Chrome", p:5000, c:"chrome"}
-    ];
-
-    function goAdmin() { if(prompt("Code:") === "2011") { admin = true; log("SYS", "ADMIN MODE"); } }
-    function log(u, m, p=false) { if(p && !admin) return; const d = document.createElement('div'); d.innerText = `[${new Date().toLocaleTimeString()}] ${u}: ${m}`; document.getElementById('logs').prepend(d); }
+    function goAdmin() { if(prompt("Code:") === "2011") { admin = true; log("SYS", "ADMIN OK"); } }
+    function log(u, m) { const d = document.createElement('div'); d.innerText = `[${new Date().toLocaleTimeString()}] ${u}: ${m}`; document.getElementById('logs').prepend(d); }
 
     function init() {
         user = document.getElementById('nick').value.toUpperCase(); if(!user) return;
@@ -109,23 +113,21 @@
             db.ref('users/'+ip).on('value', s=>{
                 const v = s.val()||{}; points=v.points||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; color=v.color||"#fff";
                 document.getElementById('stats').innerText = `Points: ${points} | Record: ${record}`;
-                document.getElementById('current-pts').innerText = `Pts: ${points}`;
                 renderShop(); renderLvls();
             });
-            log(user, "JOIN"); log(user, "IP: "+d.ip, true);
         });
         db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
             let h = ""; let a = []; s.forEach(x=>{a.push(x.val())}); a.reverse().forEach((p,i)=>{
-                h += `<div style="padding:5px; border-bottom:1px solid #222;">${i+1}. ${p.user||'ANON'} - ${p.record||0}</div>`;
+                h += `<div style="padding:5px; border-bottom:1px solid #222;">${i+1}. ${p.user||'PILOTE'} - ${p.record||0}</div>`;
             });
             document.getElementById('leaderboard').innerHTML = h;
         });
     }
 
     function renderShop() {
-        let h = ""; items.forEach(i=>{
+        let h = ""; [{n:"Cyan", p:200, c:"#00f2ff"}, {n:"Neon", p:500, c:"#39ff14"}, {n:"Chrome", p:5000, c:"chrome"}].forEach(i=>{
             const has = owned.includes(i.c);
-            h += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p})">${i.n}<br>${has?'EQUIPER':i.p+'pts'}</div>`;
+            h += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p})">${i.n} (${has?'OK':i.p})</div>`;
         });
         document.getElementById('shop-items').innerHTML = h;
     }
@@ -136,34 +138,36 @@
     }
 
     function renderLvls() {
-        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:10px; margin:2px; font-size:10px; opacity:${i<=reached?1:0.2}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
+        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:8px; margin:2px; font-size:10px; opacity:${i<=reached?1:0.2}" onclick="if(${i<=reached}) start()">${i}</div>`; }
         document.getElementById('lvls').innerHTML = h;
     }
 
     function start() { state="PLAY"; score=0; obs=[]; ballX=300; document.getElementById('screen-hub').classList.remove('active'); }
 
-    // CONTROLES HYBRIDES (PC + MOBILE)
     window.onkeydown = e => { if(e.key==="q"||e.key==="ArrowLeft") keys["L"]=true; if(e.key==="d"||e.key==="ArrowRight") keys["R"]=true; };
     window.onkeyup = e => { if(e.key==="q"||e.key==="ArrowLeft") keys["L"]=false; if(e.key==="d"||e.key==="ArrowRight") keys["R"]=false; };
     
-    cvs.addEventListener('touchstart', e => {
-        const x = e.touches[0].clientX;
-        if(x < window.innerWidth/2) keys["L"]=true; else keys["R"]=true;
-    });
-    cvs.addEventListener('touchend', () => { keys["L"]=false; keys["R"]=false; });
+    document.getElementById('btn-L').addEventListener('touchstart', (e) => { e.preventDefault(); keys["L"]=true; });
+    document.getElementById('btn-L').addEventListener('touchend', () => { keys["L"]=false; });
+    document.getElementById('btn-R').addEventListener('touchstart', (e) => { e.preventDefault(); keys["R"]=true; });
+    document.getElementById('btn-R').addEventListener('touchend', () => { keys["R"]=false; });
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            if(keys["L"]) ballX -= 11; if(keys["R"]) ballX += 11;
+            if(keys["L"]) ballX -= 12; if(keys["R"]) ballX += 12;
             ballX = Math.max(30, Math.min(570, ballX));
 
-            if(Math.random() < 0.05) obs.push({g: Math.random()*300+150, y: -50, p: false});
+            // Plus simple : Moins d'obstacles et passage plus large
+            if(Math.random() < 0.04) obs.push({g: Math.random()*250+175, y: -50, p: false});
             obs.forEach(o => {
-                o.y += 9;
+                o.y += 8; // Vitesse plus tranquille
                 ctx.fillStyle = "#00f2ff";
-                ctx.fillRect(0, o.y, o.g-100, 40); ctx.fillRect(o.g+100, o.y, 600, 40);
-                if(o.y > 720 && o.y < 780 && (ballX < o.g-75 || ballX > o.g+75)) {
+                // Passage large (120px au lieu de 100)
+                ctx.fillRect(0, o.y, o.g-120, 35); ctx.fillRect(o.g+120, o.y, 600, 35);
+                
+                // Collision plus généreuse (on meurt moins vite)
+                if(o.y > 730 && o.y < 770 && (ballX < o.g-95 || ballX > o.g+95)) {
                     state = "HUB"; document.getElementById('screen-hub').classList.add('active');
                     db.ref('users/'+ip).update({ points: points+score, record: Math.max(record, score), user: user });
                     log(user, "SCORE: "+score);
@@ -173,14 +177,11 @@
             obs = obs.filter(o => o.y < 1100);
 
             ctx.beginPath();
-            if(color === "chrome") {
-                let g = ctx.createLinearGradient(ballX-25, 725, ballX+25, 775);
-                g.addColorStop(0,"#888"); g.addColorStop(0.5,"#fff"); g.addColorStop(1,"#444"); ctx.fillStyle = g;
-            } else { ctx.fillStyle = color; }
-            ctx.arc(ballX, 750, 25, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = (color === "chrome") ? "#fff" : color;
+            ctx.arc(ballX, 750, 22, 0, Math.PI*2); ctx.fill();
 
-            ctx.fillStyle = "#fff"; ctx.font = "900 80px Orbitron"; ctx.textAlign = "center";
-            ctx.fillText(score, 300, 150);
+            ctx.fillStyle = "#fff"; ctx.font = "900 70px Orbitron"; ctx.textAlign = "center";
+            ctx.fillText(score, 300, 120);
         }
         requestAnimationFrame(loop);
     }
