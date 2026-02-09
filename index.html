@@ -2,39 +2,58 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - BALANCED</title>
+    <title>CYBER DASH - FINAL EDITION</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
-        body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { background: #010105; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        /* INTERFACE PC */
-        #left-col, #right-col { width: 260px; border: 2px solid #ffffff22; background: rgba(5,5,15,0.9); margin: 10px; border-radius: 15px; display: flex; flex-direction: column; }
+        /* --- FENÊTRES LATÉRALES (REPARÉES) --- */
+        #left-col, #right-col { 
+            width: 270px; border: 2px solid #ffffff22; background: rgba(10, 10, 25, 0.9); 
+            margin: 10px; border-radius: 15px; display: flex; flex-direction: column; 
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; }
 
-        /* ZONE DE JEU */
-        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
+        .panel-title { padding: 15px; background: rgba(255,255,255,0.05); color: #00f2ff; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; letter-spacing: 1px; }
+        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; color: #00f2ff; }
+        
+        /* --- SHOP --- */
+        #shop { flex-grow: 1; padding: 10px; overflow-y: auto; }
+        .shop-item { 
+            background: #000; border: 1px solid #ffffff22; padding: 10px; margin-bottom: 8px; 
+            border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; font-size: 10px; transition: 0.2s;
+        }
+        .shop-item.owned { border-color: #00f2ff; color: #00f2ff; font-weight: 900; }
+
+        /* --- ZONE DE JEU --- */
+        #container { height: 94vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
         canvas { width: 100%; height: 100%; }
 
-        /* BOUTONS MOBILES NEON */
-        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; box-shadow: 0 0 15px #fff; transition: 0.1s; }
+        /* --- BOUTONS MOBILES (BLANCS QUI S'INTENSIFIENT) --- */
+        .m-btn { 
+            display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; 
+            background: rgba(255,255,255,0.1); border: 3px solid #fff; 
+            border-radius: 50%; z-index: 500; justify-content: center; align-items: center; 
+            font-weight: 900; color: #fff; font-size: 24px; box-shadow: 0 0 15px #fff; transition: 0.1s;
+        }
         .m-btn.active { background: #fff; color: #000; box-shadow: 0 0 50px #fff; transform: scale(1.1); }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
 
-        /* ECRANS UI */
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; }
+        /* --- ECRANS --- */
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; padding: 20px; }
         .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; transition: 0.3s; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; text-transform: uppercase; }
         .btn-ui:hover { background: #fff; color: #000; }
 
-        /* ETOILES */
-        .star-box { margin: 20px; display: flex; gap: 10px; }
+        /* --- ETOILES --- */
+        .star-box { margin: 20px; display: flex; gap: 15px; }
         .star { font-size: 50px; color: #ffd700; opacity: 0; transform: scale(0); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .star.pop { opacity: 1; transform: scale(1.2); text-shadow: 0 0 25px #ffd700; }
+        .star.pop { opacity: 1; transform: scale(1.2); text-shadow: 0 0 20px #ffd700; }
 
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
@@ -43,7 +62,7 @@
 
     <div id="left-col">
         <div class="panel-title">CLASSEMENT</div>
-        <div id="leaderboard" style="padding:10px; font-size:11px; flex-grow:1; color:#00f2ff;"></div>
+        <div id="leaderboard">Chargement...</div>
     </div>
 
     <div id="game-col">
@@ -52,19 +71,19 @@
             <div id="btn-R" class="m-btn">R</div>
 
             <div id="screen-login" class="screen active-screen">
-                <h1 style="font-size:30px; letter-spacing:5px;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="TON PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none; width:70%;">
+                <h1 style="font-size:32px; letter-spacing:4px;">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." maxlength="12" style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none; width:80%;">
                 <div class="btn-ui" onclick="init()">JOUER</div>
             </div>
 
             <div id="screen-hub" class="screen">
                 <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size:14px;"></div>
-                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
+                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;"></div>
                 <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">MODE INFINI</div>
             </div>
 
             <div id="screen-win" class="screen">
-                <h2 style="color:#fff;">NIVEAU RÉUSSI !</h2>
+                <h2 style="font-size:24px;">NIVEAU RÉUSSI !</h2>
                 <div class="star-box">
                     <span class="star" id="s1">★</span><span class="star" id="s2">★</span><span class="star" id="s3">★</span>
                 </div>
@@ -77,14 +96,14 @@
 
     <div id="right-col">
         <div class="panel-title">BOUTIQUE</div>
-        <div id="shop" style="flex-grow:1; padding:10px;">
+        <div id="shop">
             <div id="shop-items"></div>
         </div>
         <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:18px;">0 🪙</div>
     </div>
 
 <script>
-    // CONFIGURATION FIREBASE
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -120,13 +139,17 @@
                 renderLvls(); renderShop();
             });
         });
+        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
+            let h = ""; s.forEach(x=>{ let p=x.val(); h=`<div style="padding:8px; border-bottom:1px solid #ffffff11;">${p.user}: ${p.record}</div>`+h; });
+            document.getElementById('leaderboard').innerHTML = h;
+        });
     }
 
     function renderShop() {
-        let h = ""; [{id:"#00f2ff", n:"NEON", p:100}, {id:"#ff00ff", n:"PINK", p:250}, {id:"#ffd700", n:"GOLD", p:600}].forEach(s => {
+        let h = ""; [{id:"#00f2ff", n:"NEON", p:100}, {id:"#ff00ff", n:"PINK", p:300}, {id:"#ffd700", n:"GOLD", p:1000}].forEach(s => {
             const isOwned = owned.includes(s.id);
-            h += `<div style="border:1px solid #ffffff22; background:rgba(0,0,0,0.5); padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; font-size:11px; ${isOwned?'border-color:#00f2ff; color:#00f2ff;':''}" onclick="buy('${s.id}',${s.p})">
-                <span>${s.n}</span><span>${isOwned?'POSSÉDÉ':s.p+' 🪙'}</span>
+            h += `<div class="shop-item ${isOwned?'owned':''}" onclick="buy('${s.id}',${s.p})">
+                <span>${s.n}</span><span>${isOwned?'OK':s.p+' 🪙'}</span>
             </div>`;
         });
         document.getElementById('shop-items').innerHTML = h;
@@ -138,93 +161,4 @@
     }
 
     function renderLvls() {
-        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:18px; margin:0; opacity:${i<=reached?1:0.2}; border-color:${i<=reached?'#fff':'#444'}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
-        document.getElementById('lvls').innerHTML = h;
-    }
-
-    function start(l) { 
-        currentLvl = l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750;
-        document.getElementById('screen-hub').classList.remove('active-screen'); 
-    }
-
-    function press(dir, act) { 
-        keys[dir] = act; 
-        const btn = document.getElementById('btn-'+dir);
-        if(btn) { if(act) btn.classList.add('active'); else btn.classList.remove('active'); }
-    }
-    window.onkeydown = e => { if(e.key==="ArrowLeft") press("L", true); if(e.key==="ArrowRight") press("R", true); };
-    window.onkeyup = e => { if(e.key==="ArrowLeft") press("L", false); if(e.key==="ArrowRight") press("R", false); };
-    document.getElementById('btn-L').ontouchstart = e => { e.preventDefault(); press("L", true); };
-    document.getElementById('btn-L').ontouchend = () => press("L", false);
-    document.getElementById('btn-R').ontouchstart = e => { e.preventDefault(); press("R", true); };
-    document.getElementById('btn-R').ontouchend = () => press("R", false);
-
-    function loop() {
-        ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
-        if(state === "PLAY") {
-            // CALCUL DIFFICULTÉ PROGRESSIVE
-            const speed = (currentLvl === 'INF') ? 8.5 : (4.5 + (currentLvl * 0.9)); 
-            const gapWidth = (currentLvl === 'INF') ? 120 : (170 - (currentLvl * 7)); 
-
-            if(keys["L"]) ballX -= 13; if(keys["R"]) ballX += 13;
-            ballX = Math.max(30, Math.min(570, ballX));
-
-            const isFinishing = (currentLvl !== 'INF' && score >= 100);
-            
-            if(!isFinishing && Math.random() < 0.04) {
-                let centerGap = Math.random()*(600 - gapWidth - 100) + (gapWidth/2 + 50);
-                obs.push({g: centerGap, y: -50, p: false});
-                if(Math.random() < 0.4) pieces.push({x: centerGap, y: -50});
-            }
-            
-            obs.forEach(o => {
-                o.y += speed;
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 5; ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
-                ctx.strokeRect(-10, o.y, o.g - (gapWidth/2), 25); 
-                ctx.strokeRect(o.g + (gapWidth/2), o.y, 610, 25);
-                ctx.shadowBlur = 0;
-
-                if(o.y > ballY-20 && o.y < ballY+25 && (ballX < o.g - (gapWidth/2 - 15) || ballX > o.g + (gapWidth/2 - 15))) {
-                    state = "HUB"; document.getElementById('screen-hub').classList.add('active-screen');
-                    record = Math.max(record, score); sync();
-                }
-                if(o.y > ballY && !o.p) { o.p = true; score++; }
-            });
-
-            pieces.forEach((p, i) => {
-                p.y += speed;
-                ctx.fillStyle = "#ffd700"; ctx.shadowBlur = 15; ctx.shadowColor = "#ffd700";
-                ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                if(Math.hypot(p.x-ballX, p.y-ballY) < 35) { pieces.splice(i, 1); coins++; sync(); }
-            });
-
-            if(isFinishing) {
-                ballY -= 8;
-                let grad = ctx.createLinearGradient(0, 0, 0, 400);
-                grad.addColorStop(0, "rgba(255,255,255,0.8)"); grad.addColorStop(1, "transparent");
-                ctx.fillStyle = grad; ctx.fillRect(0,0,600,500);
-                if(ballY < -50) {
-                    state = "WIN"; document.getElementById('screen-win').classList.add('active-screen');
-                    setTimeout(()=>document.getElementById('s1').classList.add('pop'), 200);
-                    setTimeout(()=>document.getElementById('s2').classList.add('pop'), 450);
-                    setTimeout(()=>document.getElementById('s3').classList.add('pop'), 700);
-                    if(currentLvl === reached) reached++; sync();
-                }
-            }
-
-            // DESSIN BALLE
-            ctx.fillStyle = ballColor; ctx.shadowBlur = 20; ctx.shadowColor = ballColor;
-            ctx.beginPath(); ctx.arc(ballX, ballY, 22, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0; 
-            
-            // HUD
-            ctx.fillStyle = "#fff"; ctx.font = "900 85px Orbitron"; ctx.textAlign = "center";
-            ctx.fillText(score, 300, 150);
-            ctx.fillStyle = "#ffd700"; ctx.font = "20px Orbitron"; ctx.fillText(coins + " 🪙", 300, 185);
-        }
-        requestAnimationFrame(loop);
-    }
-    loop();
-</script>
-</body>
-</html>
+        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="
