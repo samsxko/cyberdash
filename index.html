@@ -11,43 +11,18 @@
     <style>
         * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* COLONNES */
         #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
         #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        
         canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; background: #000; z-index: 1; }
-        
-        /* UI COMPONENTS */
         .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00f2ff44; }
-        #admin-trigger { cursor: crosshair; }
-        
         .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
         .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; }
         .rank-card b { color: #00f2ff; }
-        
-        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); animation: fadeIn 0.3s ease; }
-        
-        /* BOUTON PAYPAL */
-        .btn-paypal {
-            margin: 15px; padding: 12px;
-            background: linear-gradient(135deg, #ffc439 0%, #ff9600 100%);
-            color: #003087; text-align: center; border-radius: 8px;
-            font-weight: 900; text-decoration: none; font-size: 12px;
-            display: block; transition: 0.3s; text-transform: uppercase;
-        }
-        .btn-paypal:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 196, 57, 0.4); }
-
+        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
+        .btn-paypal { margin: 15px; padding: 12px; background: linear-gradient(135deg, #ffc439 0%, #ff9600 100%); color: #003087; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; font-size: 12px; display: block; text-transform: uppercase; }
         #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* RESPONSIVE */
-        @media (max-width: 1000px) { 
-            #left-col, #right-col { display: none !important; } 
-            #game-col { width: 100vw; height: 100vh; } 
-            canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; margin: 0; } 
-        }
+        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; } }
     </style>
 </head>
 <body>
@@ -65,12 +40,11 @@
     </div>
 
     <div id="right-col">
-        <div class="panel-header" id="admin-trigger" onclick="adminClear()">🛰️ Live Tracking</div>
+        <div class="panel-header" id="admin-trigger" style="cursor:crosshair" onclick="adminClear()">🛰️ Live Tracking</div>
         <div id="logs" class="scroll-list"></div>
     </div>
 
     <script>
-        // CONFIG FIREBASE
         const firebaseConfig = {
           apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
           authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -83,45 +57,32 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // VARIABLES GLOBALES
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const mInput = document.getElementById('mobileInput');
-        canvas.width = 600; canvas.height = 1000;
+        // Variables initialisées immédiatement pour ne rien bloquer
+        let userIP = "ID_" + Math.floor(Math.random() * 1000000); 
+        let netData = { ip: "0.0.0.0", loc: "Local" };
+        let lastKnownPseudo = "";
 
-        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300;
-        let obstacles = [], stars = [], keys = {};
-        let userIP = "unknown", lastKnownPseudo = "", netData = { ip: "...", loc: "Detecting..." };
-
-        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
-
-        // RÉCUPÉRATION INFOS RÉSEAU & HISTORIQUE
+        // Chargement IP en arrière-plan
         fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
             netData.ip = d.ip; 
-            netData.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
+            netData.loc = d.city || "Inconnu";
             userIP = d.ip.replace(/\./g, '_');
-            
             db.ref('userHistory/' + userIP).once('value').then(snap => {
                 if(snap.exists()) lastKnownPseudo = snap.val().lastPseudo;
             });
-        });
+        }).catch(e => console.log("IP non chargée, utilisation ID temporaire."));
 
-        // ADMIN : EFFACER LES LOGS (Code: 1234)
-        function adminClear() {
-            if(prompt("CODE ADMIN :") === "1234") {
-                if(confirm("Vider les logs ?")) db.ref('logs').remove();
-            }
-        }
+        function adminClear() { if(prompt("CODE:") === "1234") db.ref('logs').remove(); }
 
-        // LOGS & CLASSEMENT
         function pushLog(u, a) {
             let displayPseudo = (lastKnownPseudo && lastKnownPseudo !== u) ? `${u} (ex: ${lastKnownPseudo})` : u;
             db.ref('userHistory/' + userIP).set({ lastPseudo: u });
-            lastKnownPseudo = u;
-
             db.ref('logs').push({ 
-                user: displayPseudo, action: a, loc: netData.loc, 
-                ip: netData.ip, time: new Date().toLocaleTimeString('fr-FR') 
+                user: displayPseudo, 
+                action: a, 
+                loc: netData.loc, 
+                ip: netData.ip, 
+                time: new Date().toLocaleTimeString('fr-FR') 
             });
         }
 
@@ -129,9 +90,9 @@
             let entries = [];
             snap.forEach(c => { if(c.val().name) entries.push(c.val()); });
             entries.sort((a,b) => b.score - a.score);
-            document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `
-                <div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span style="color:#00f2ff">${s.score}</span></div>
-            `).join('') || "<div style='text-align:center;font-size:10px;color:#666'>En attente...</div>";
+            document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => 
+                `<div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><b>${s.score}</b></div>`
+            ).join('') || "<div style='text-align:center;color:#666'>...</div>";
         });
 
         db.ref('logs').limitToLast(15).on('value', snap => {
@@ -139,17 +100,21 @@
             snap.forEach(c => {
                 const l = c.val();
                 let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
-                html = `<div class="log-card" style="border-left-color:${col}">
-                    <b style="color:${col}">${l.user}</b>: ${l.action}<br>
-                    <span style="color:#888; font-size:9px;">🕒 ${l.time} | 🌐 ${l.ip}</span><br>
-                    <span style="color:#00f2ff; font-size:9px;">📍 ${l.loc}</span>
-                </div>` + html;
+                html = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}<br><span style="font-size:9px;color:#888">${l.time} | ${l.ip} | ${l.loc}</span></div>` + html;
             });
             document.getElementById('logs').innerHTML = html;
         });
 
-        // INPUTS
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const mInput = document.getElementById('mobileInput');
+        canvas.width = 600; canvas.height = 1000;
+
+        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], stars = [], keys = {};
+        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+
         mInput.addEventListener('input', (e) => { if(state === "MENU") pseudo = e.target.value.toUpperCase(); });
+
         window.addEventListener("keydown", e => {
             if(state === "MENU" && e.key === "Enter" && pseudo.length >= 3) startGame();
             if(state === "GAMEOVER" && e.key === " ") resetToMenu();
@@ -161,18 +126,21 @@
             e.preventDefault();
             const r = canvas.getBoundingClientRect();
             const tx = (e.touches[0].clientX - r.left) / r.width * 600;
-            if(state === "MENU") { mInput.focus(); if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); }
+            if(state === "MENU") { 
+                mInput.focus(); 
+                if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); 
+            }
             else if(state === "GAMEOVER") resetToMenu();
             else { if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
         }, {passive: false});
+
         canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
 
-        // LOGIQUE JEU
         function startGame() { state = "PLAYING"; mInput.blur(); pushLog(pseudo, "DÉCOLLAGE"); }
         function resetToMenu() { state = "MENU"; score = 0; level = 1; obstacles = []; ballX = 300; pseudo = ""; mInput.value = ""; }
 
         function saveScore(p, s) {
-            if(s < 1 || !p || userIP === "unknown") return;
+            if(s < 1 || !p) return;
             const ref = db.ref('bestScores/' + userIP);
             ref.once('value').then(snap => {
                 if(!snap.exists() || snap.val().score < s) ref.set({ name: p, score: s });
@@ -182,57 +150,62 @@
         function update() {
             stars.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
             if(state !== "PLAYING") return;
+
             let spd = 9 + (level * 0.4);
             if(keys["ArrowLeft"]) ballX -= 12;
             if(keys["ArrowRight"]) ballX += 12;
             ballX = Math.max(30, Math.min(570, ballX));
-            
+
             if(Math.random() < 0.05) {
-                let w = Math.max(165, 430 - (level * 15));
-                obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
+                obstacles.push({x: Math.random()*(600-200), y: -50, w: 200, hit: false});
             }
-            obstacles.forEach(o => {
+
+            // Boucle de mise à jour sécurisée
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let o = obstacles[i];
                 o.y += spd;
+                
+                // Collision
                 if(o.y > 875 && o.y < 915 && !(ballX > o.x && ballX < o.x + o.w)) {
-                    state = "GAMEOVER";
-                    pushLog(pseudo, "CRASH (" + score + ")");
+                    state = "GAMEOVER"; 
+                    pushLog(pseudo, "CRASH (" + score + ")"); 
                     saveScore(pseudo, score);
                 }
-                if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score % 10 === 0) level++; }
-            });
-            obstacles = obstacles.filter(o => o.y < 1100);
+                
+                // Score & Level Up
+                if(o.y > 1000 && !o.hit) { 
+                    o.hit = true; 
+                    score++; 
+                    if(score % 10 === 0) level++; 
+                }
+
+                // Suppression propre
+                if(o.y > 1100) obstacles.splice(i, 1);
+            }
         }
 
         function draw() {
             ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-            ctx.fillStyle = "rgba(255,255,255,0.8)";
-            stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+            ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
 
             if(state === "MENU") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
-                ctx.fillText("CYBER DASH", 300, 350);
-                ctx.fillStyle = "#fff"; ctx.font = "16px Orbitron";
-                ctx.fillText("PSEUDO (3 MIN) :", 300, 450);
-                ctx.fillStyle = "#00f2ff"; ctx.font = "bold 45px Orbitron";
-                ctx.fillText(pseudo || "____", 300, 520);
-                if(pseudo.length >= 3) { ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron"; ctx.fillText("CLIQUE POUR JOUER", 300, 600); }
+                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron"; ctx.fillText("CYBER DASH", 300, 350);
+                ctx.fillStyle = "#fff"; ctx.font = "16px Orbitron"; ctx.fillText("TAPE TON PSEUDO ICI :", 300, 450);
+                ctx.fillStyle = "#00f2ff"; ctx.font = "bold 45px Orbitron"; ctx.fillText(pseudo || "____", 300, 520);
+                if(pseudo.length >= 3) { ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron"; ctx.fillText("CLIQUE ICI POUR JOUER", 300, 600); }
             } else if(state === "PLAYING") {
-                ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
+                ctx.fillStyle = "#00f2ff"; 
                 obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 35); ctx.fillRect(o.x+o.w, o.y, 600, 35); });
-                ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 10; ctx.textAlign = "left"; ctx.font = "900 60px Orbitron";
-                ctx.fillText(score, 40, 90);
+                ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
+                ctx.textAlign = "left"; ctx.font = "900 60px Orbitron"; ctx.fillText(score, 60, 90);
             } else if(state === "GAMEOVER") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#ff0044"; ctx.font = "900 70px Orbitron";
-                ctx.fillText("CRASHED", 300, 450);
-                ctx.fillStyle = "#fff"; ctx.font = "30px Orbitron";
-                ctx.fillText("SCORE: " + score, 300, 550);
-                ctx.font = "15px Orbitron"; ctx.fillText("TOUCHER POUR RECOMMENCER", 300, 620);
+                ctx.textAlign="center"; ctx.fillStyle="#f04"; ctx.font="900 70px Orbitron"; ctx.fillText("CRASHED", 300, 450);
+                ctx.fillStyle="#fff"; ctx.font="30px Orbitron"; ctx.fillText("SCORE: "+score, 300, 550);
+                ctx.font="15px Orbitron"; ctx.fillText("TOUCHER POUR RECOMMENCER", 300, 620);
             }
-            ctx.shadowBlur = 0; requestAnimationFrame(draw);
+            requestAnimationFrame(draw);
         }
-        setInterval(update, 1000/60);
+        setInterval(update, 1000/60); 
         draw();
     </script>
 </body>
