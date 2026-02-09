@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - ASCENSION</title>
+    <title>CYBER DASH - VERSION FINALE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -17,27 +17,40 @@
         canvas { width: 100%; height: 100%; }
         .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; padding: 20px; }
         .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; transition: 0.2s; }
+        
+        /* TABS SHOP */
         .shop-tabs { display: flex; gap: 5px; padding: 10px; border-bottom: 1px solid #333; }
         .tab-btn { flex: 1; padding: 8px; font-size: 10px; background: #111; border: 1px solid #444; color: #fff; cursor: pointer; font-family: 'Orbitron'; font-weight: 900; }
-        .tab-btn.active { background: #ff007f; border-color: #ff007f; }
+        .tab-btn.active { background: #ff007f; border-color: #ff007f; box-shadow: 0 0 10px #ff007f; }
+
         .btn-infini-event { position: relative; background: linear-gradient(135deg, #ff007f, #ff66b2, #99004d); border: none; color: white; padding: 20px; font-weight: 900; margin-top: 25px; width: 85%; cursor: pointer; border-radius: 10px; }
         .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff11; font-size: 11px; }
         .buy-btn { background: #00f2ff; color: #000; border: none; padding: 7px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
+        
+        #paypal-box { background: #ffc439; color: #003087; font-weight: 900; padding: 12px; border-radius: 5px; margin: 10px; cursor: pointer; text-align: center; font-size: 12px; }
         #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:24px; }
+        
+        #admin-panel { display: none; position: absolute; top: 60px; right: 20px; background: #ff0044; color: #fff; padding: 15px; border-radius: 10px; z-index: 1000; }
         .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
 </head>
 <body>
+
     <div id="left-col"><div class="panel-title">CLASSEMENT</div><div id="leaderboard" class="scroll-zone"></div></div>
+
     <div id="game-col">
+        <div id="admin-panel">
+            <button onclick="coins+=5000;sync()" class="buy-btn">+5000 🪙</button>
+            <button onclick="reached=9;sync()" class="buy-btn">MAX NIV</button>
+        </div>
         <div id="container">
             <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
             <div id="screen-login" class="screen active-screen">
-                <h1>CYBER DASH</h1>
+                <h1 style="font-size: 40px;">CYBER DASH</h1>
                 <input type="text" id="nick" placeholder="PSEUDO..." maxlength="10" style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron';">
                 <div class="btn-ui" onclick="init()">ENTRER</div>
             </div>
@@ -48,36 +61,38 @@
             </div>
             <div id="screen-win" class="screen">
                 <h2 style="color:#ffd700">VICTOIRE !</h2>
-                <div style="margin:20px; font-size: 40px;">✨✨✨</div>
+                <div style="margin:20px; font-size: 40px;">✨🚀✨</div>
                 <div class="btn-ui" onclick="closeWin()">RETOUR AU HUB</div>
             </div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
+
     <div id="right-col">
-        <div class="panel-title">BOUTIQUE</div>
+        <div class="panel-title" ondblclick="toggleAdmin()">BOUTIQUE</div>
         <div class="shop-tabs">
             <button class="tab-btn active" onclick="setTab('SKIN', this)">SKINS</button>
             <button class="tab-btn" onclick="setTab('TRAIL', this)">EFFETS</button>
         </div>
         <div id="shop" class="scroll-zone"></div>
+        <div id="paypal-box" onclick="paypalRedirect()">PAYPAL: +5000 🪙 (2.99€)</div>
         <div id="user-coins">0 🪙</div>
     </div>
 
 <script>
+    // CONFIG FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0", authDomain: "cyberdash-2baf5.firebaseapp.com", databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app", projectId: "cyberdash-2baf5", storageBucket: "cyberdash-2baf5.firebasestorage.app", messagingSenderId: "360233647601", appId: "1:360233647601:web:60aa25f439019ed7511850" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
     
     let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], particles=[], keys={}, state="LOGIN", score=0;
-    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"], shopTab="SKIN";
-    
-    // CINEMATIQUE VARS
-    let winAura = 0;
+    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"], shopTab="SKIN", winAura=0;
 
     function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentTrail, user}); }
+    function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
     function setTab(t, el) { shopTab = t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderShop(); }
+    function paypalRedirect() { window.open("https://paypal.me/frsaamya/2.99", '_blank'); }
 
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
@@ -93,19 +108,16 @@
                 renderLvls(); renderShop();
             });
         });
+        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
+            let h=""; s.forEach(x=>{ let p=x.val(); h=`<div class="item-list"><span>${p.user}</span><b>${p.record}</b></div>`+h; });
+            document.getElementById('leaderboard').innerHTML=h;
+        });
     }
 
     function renderShop() {
         const items = [
-            {id:"#fff", n:"BASIQUE", p:0, type:"SKIN"}, {id:"#00f2ff", n:"CYAN NEON", p:200, type:"SKIN"}, 
-            {id:"#ff00ff", n:"MAGENTA", p:500, type:"SKIN"}, {id:"#00ff00", n:"MATRIX", p:800, type:"SKIN"},
-            {id:"#ffff00", n:"CITRON", p:1200, type:"SKIN"}, {id:"#ff4500", n:"BRAISE", p:2000, type:"SKIN"},
-            {id:"#9b59b6", n:"AMÉTHYSTE", p:3000, type:"SKIN"}, {id:"#ffd700", n:"OR PUR", p:5000, type:"SKIN"},
-            {id:"#1abc9c", n:"TURQUOISE", p:6000, type:"SKIN"}, {id:"#34495e", n:"NIGHT", p:7000, type:"SKIN"},
-            {id:"none", n:"AUCUN", p:0, type:"TRAIL"}, {id:"poudre", n:"POUDRE", p:300, type:"TRAIL"}, 
-            {id:"flame", n:"FEU", p:1000, type:"TRAIL"}, {id:"rainbow", n:"ARC-EN-CIEL", p:2500, type:"TRAIL"},
-            {id:"ghost", n:"FANTÔME", p:4000, type:"TRAIL"}, {id:"gold-dust", n:"POUSSIÈRE D'OR", p:6000, type:"TRAIL"},
-            {id:"electro", n:"ÉLECTRIQUE", p:8000, type:"TRAIL"}
+            {id:"#fff", n:"BASIQUE", p:0, type:"SKIN"}, {id:"#00f2ff", n:"CYAN NEON", p:200, type:"SKIN"}, {id:"#ff00ff", n:"MAGENTA", p:500, type:"SKIN"}, {id:"#00ff00", n:"MATRIX", p:800, type:"SKIN"}, {id:"#ffff00", n:"CITRON", p:1200, type:"SKIN"}, {id:"#ff4500", n:"BRAISE", p:2000, type:"SKIN"}, {id:"#9b59b6", n:"AMÉTHYSTE", p:3000, type:"SKIN"}, {id:"#ffd700", n:"OR PUR", p:5000, type:"SKIN"}, {id:"#1abc9c", n:"TURQUOISE", p:6000, type:"SKIN"}, {id:"#34495e", n:"NIGHT", p:7000, type:"SKIN"},
+            {id:"none", n:"AUCUN", p:0, type:"TRAIL"}, {id:"poudre", n:"POUDRE", p:300, type:"TRAIL"}, {id:"flame", n:"FEU", p:1000, type:"TRAIL"}, {id:"rainbow", n:"ARC-EN-CIEL", p:2500, type:"TRAIL"}, {id:"ghost", n:"FANTÔME", p:4000, type:"TRAIL"}, {id:"gold-dust", n:"POUSSIÈRE D'OR", p:6000, type:"TRAIL"}, {id:"electro", n:"ÉLECTRIQUE", p:8000, type:"TRAIL"}
         ];
         let h = "";
         items.filter(i=>i.type===shopTab).forEach(s => { 
@@ -122,15 +134,18 @@
 
     function drawHeart(x, y, size, color) {
         ctx.fillStyle = color; ctx.beginPath();
-        ctx.moveTo(x, y + size/4);
-        ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
+        ctx.moveTo(x, y + size/4); ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
         ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size*0.75, x, y + size);
         ctx.bezierCurveTo(x, y + size*0.75, x + size/2, y + size/2, x + size/2, y + size/4);
         ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4); ctx.fill();
     }
 
-    window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
-    window.onkeyup=e=>{if(e.key.includes("Left"))keys["L"]=false;if(e.key.includes("Right"))keys["R"]=false;};
+    function press(d, a) { keys[d]=a; }
+    window.onkeydown=e=>{if(e.key.includes("Left"))press("L",true);if(e.key.includes("Right"))press("R",true);};
+    window.onkeyup=e=>{if(e.key.includes("Left"))press("L",false);if(e.key.includes("Right"))press("R",false);};
+    document.getElementById('btn-L').ontouchstart=e=>{e.preventDefault();press("L",true);};
+    document.getElementById('btn-R').ontouchstart=e=>{e.preventDefault();press("R",true);};
+    document.onmouseup=document.ontouchend=()=>{press("L",false);press("R",false);};
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
@@ -153,15 +168,12 @@
                     if(Math.random()<0.4) pieces.push({x:c, y:-50});
                 }
             } else {
-                // CINEMATIQUE D'ASCENSION VERS LA LUMIERE
-                winAura += 0.015;
-                ballY -= 8;
-                // Rayon de lumière du haut
+                // ANIMATION ASCENSION LUMIERE
+                winAura += 0.015; ballY -= 8;
                 let grad = ctx.createLinearGradient(0, 0, 0, 600);
                 grad.addColorStop(0, "rgba(255,255,255," + winAura + ")");
                 grad.addColorStop(1, "transparent");
                 ctx.fillStyle = grad; ctx.fillRect(0, 0, 600, 800);
-                // Particules qui montent
                 if(Math.random()<0.3) particles.push({x: Math.random()*600, y: 1000, r: Math.random()*3+1, a: 1, c: "#fff", vy: -15});
             }
 
@@ -192,11 +204,9 @@
             if(ballY < -100 && state === "PLAY") { state="WIN"; document.getElementById('screen-win').classList.add('active-screen'); if(currentLvl===reached)reached++; sync(); }
             
             ctx.fillStyle=ballColor; ctx.beginPath(); ctx.arc(ballX,ballY,22,0,Math.PI*2); ctx.fill();
-            // Glow autour de la balle en fin de niveau
             if(score >= target) {
                 ctx.shadowBlur = 30; ctx.shadowColor = "#fff";
-                ctx.beginPath(); ctx.arc(ballX,ballY,25,0,Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(ballX,ballY,25,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
             }
             ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,160);
         }
