@@ -2,194 +2,218 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - ULTIMATE</title>
+    <title>CYBER DASH - SAGA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <style>
         * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
-        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; background: #000; z-index: 1; }
-        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00f2ff44; }
-        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
-        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; }
-        .rank-card b { color: #00f2ff; }
-        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); animation: fadeIn 0.3s ease; }
-        .btn-paypal { margin: 15px; padding: 12px; background: linear-gradient(135deg, #ffc439 0%, #ff9600 100%); color: #003087; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; font-size: 12px; display: block; transition: 0.3s; text-transform: uppercase; }
-        .btn-paypal:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 196, 57, 0.4); }
-        #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
-        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; } }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        #right-col { width: 320px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; border-radius: 8px; background: #000; }
+        .panel-header { padding: 15px; font-size: 12px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
+        .scroll-list { flex-grow: 1; overflow-y: auto; padding: 10px; scrollbar-width: none; }
+        .rank-card { display: flex; justify-content: space-between; padding: 10px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; font-size: 11px; border-left: 2px solid #00f2ff; }
+        .btn-paypal { margin: 10px; padding: 12px; background: #ffc439; color: #003087; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; font-size: 11px; text-transform: uppercase; }
+        #mobileInput { position: absolute; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0; }
+        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } canvas { width: 100vw; height: 100vh; border: none; } }
     </style>
 </head>
 <body>
-
-    <input type="text" id="mobileInput" maxlength="10">
-
+    <input type="text" id="mobileInput" maxlength="10" autocomplete="off">
     <div id="left-col">
-        <div class="panel-header">🏆 Top 15 World</div>
+        <div class="panel-header">🏆 TOP CLASSEMENT</div>
         <div id="leaderboard" class="scroll-list"></div>
-        <a href="https://paypal.me/frsaamya" target="_blank" class="btn-paypal">☕ Offre-moi un café</a>
+        <a href="https://paypal.me/frsaamya" target="_blank" class="btn-paypal">☕ Offrir un café</a>
     </div>
-
-    <div id="game-col">
-        <canvas id="gameCanvas"></canvas>
-    </div>
-
+    <div id="game-col"><canvas id="gameCanvas"></canvas></div>
     <div id="right-col">
-        <div class="panel-header" id="admin-trigger" style="cursor:crosshair" onclick="adminClear()">🛰️ Live Tracking</div>
+        <div class="panel-header">🛰️ ACTIVITÉ LIVE</div>
         <div id="logs" class="scroll-list"></div>
     </div>
 
-    <script>
-        const firebaseConfig = {
-          apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
-          authDomain: "cyberdash-2baf5.firebaseapp.com",
-          databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app",
-          projectId: "cyberdash-2baf5",
-          storageBucket: "cyberdash-2baf5.firebasestorage.app",
-          messagingSenderId: "360233647601",
-          appId: "1:360233647601:web:60aa25f439019ed7511850"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
+        authDomain: "cyberdash-2baf5.firebaseapp.com",
+        databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "cyberdash-2baf5",
+        storageBucket: "cyberdash-2baf5.firebasestorage.app",
+        messagingSenderId: "360233647601",
+        appId: "1:360233647601:web:60aa25f439019ed7511850"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // Sécurité : ID temporaire si l'IP met du temps
-        let userIP = "ID_" + Math.floor(Math.random()*999999);
-        let lastKnownPseudo = "";
-        let netData = { ip: "Loading...", loc: "Detecting..." };
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const mInput = document.getElementById('mobileInput');
+    canvas.width = 600; canvas.height = 1000;
+    
+    let state = "MENU", pseudo = "", score = 0, ballX = 300, obstacles = [], stars = [], keys = {};
+    let userIP = "temp", reachedLevel = 1, selectedLevel = 1, userStars = {};
+    let swipeY = 0, isWin = false;
 
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            netData.ip = d.ip; 
-            netData.loc = d.city + ", " + d.country_name;
-            userIP = d.ip.replace(/\./g, '_');
-            db.ref('userHistory/' + userIP).once('value').then(snap => {
-                if(snap.exists()) lastKnownPseudo = snap.val().lastPseudo;
-            });
-        });
+    // Couleurs par niveau
+    const lvColors = ["#00f2ff", "#ff00ff", "#00ff88", "#ffff00", "#ff4400", "#ffffff", "#8800ff", "#ff0066", "#0044ff", "#ffcc00"];
 
-        function adminClear() { if(prompt("CODE ADMIN :") === "1234") db.ref('logs').remove(); }
+    for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
 
-        function pushLog(u, a) {
-            let displayPseudo = (lastKnownPseudo && lastKnownPseudo !== u) ? `${u} (ex: ${lastKnownPseudo})` : u;
-            db.ref('userHistory/' + userIP).update({ lastPseudo: u });
-            db.ref('logs').push({ user: displayPseudo, action: a, loc: netData.loc, ip: netData.ip, time: new Date().toLocaleTimeString('fr-FR') });
-        }
-
-        db.ref('bestScores').on('value', snap => {
-            let entries = [];
-            snap.forEach(c => { if(c.val().name) entries.push(c.val()); });
-            entries.sort((a,b) => b.score - a.score);
-            document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `<div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span style="color:#00f2ff">${s.score}</span></div>`).join('');
-        });
-
-        db.ref('logs').limitToLast(15).on('value', snap => {
-            let html = "";
-            snap.forEach(c => {
-                const l = c.val();
-                let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
-                html = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}<br><span style="font-size:9px;color:#888">🕒 ${l.time} | 🌐 ${l.ip}</span></div>` + html;
-            });
-            document.getElementById('logs').innerHTML = html;
-        });
-
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const mInput = document.getElementById('mobileInput');
-        canvas.width = 600; canvas.height = 1000;
-
-        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], stars = [], keys = {};
-        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
-
-        mInput.addEventListener('input', (e) => { if(state === "MENU") pseudo = e.target.value.toUpperCase(); });
-
-        window.addEventListener("keydown", e => {
-            if(state === "MENU" && e.key === "Enter" && pseudo.length >= 3) startGame();
-            if(state === "GAMEOVER" && e.key === " ") resetToMenu();
-            keys[e.key] = true;
-        });
-        window.addEventListener("keyup", e => keys[e.key] = false);
-
-        canvas.addEventListener("touchstart", e => {
-            e.preventDefault();
-            const r = canvas.getBoundingClientRect();
-            const tx = (e.touches[0].clientX - r.left) / r.width * 600;
-            if(state === "MENU") { mInput.focus(); if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); }
-            else if(state === "GAMEOVER") resetToMenu();
-            else { if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
-        }, {passive: false});
-
-        canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
-
-        function startGame() { state = "PLAYING"; mInput.blur(); pushLog(pseudo, "DÉCOLLAGE"); }
-        function resetToMenu() { state = "MENU"; score = 0; level = 1; obstacles = []; ballX = 300; pseudo = ""; mInput.value = ""; }
-
-        function saveScore(p, s) {
-            if(s < 1 || !p) return;
-            const ref = db.ref('bestScores/' + userIP);
-            ref.once('value').then(snap => {
-                if(!snap.exists() || snap.val().score < s) ref.set({ name: p, score: s });
-            });
-        }
-
-        function update() {
-            stars.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
-            if(state !== "PLAYING") return;
-
-            let spd = 9 + (level * 0.4);
-            if(keys["ArrowLeft"]) ballX -= 12;
-            if(keys["ArrowRight"]) ballX += 12;
-            ballX = Math.max(30, Math.min(570, ballX));
-
-            if(Math.random() < 0.05) {
-                let w = Math.max(165, 430 - (level * 15));
-                obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
+    fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+        userIP = d.ip.replace(/\./g, '_');
+        db.ref('users/' + userIP).on('value', snap => {
+            if(snap.exists()) {
+                reachedLevel = snap.val().reached || 1;
+                userStars = snap.val().stars || {};
             }
+        });
+    });
 
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                let o = obstacles[i];
-                o.y += spd;
-                if(o.y > 875 && o.y < 915 && !(ballX > o.x && ballX < o.x + o.w)) {
-                    state = "GAMEOVER"; pushLog(pseudo, "CRASH (" + score + ")"); saveScore(pseudo, score);
-                }
-                if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score % 10 === 0) level++; }
-                if(o.y > 1100) obstacles.splice(i, 1);
+    db.ref('bestScores').on('value', snap => {
+        let items = []; snap.forEach(c => items.push(c.val()));
+        items.sort((a,b) => b.score - a.score);
+        document.getElementById('leaderboard').innerHTML = items.slice(0,15).map((s,i) => `<div class="rank-card"><span>#${i+1} ${s.name}</span><b>${s.score}</b></div>`).join('');
+    });
+
+    function startGame(mode) {
+        state = mode; score = 0; obstacles = []; ballX = 300; isWin = false;
+        mInput.blur();
+        db.ref('logs').push({ user: pseudo || "Anonyme", action: "Départ " + mode, time: new Date().toLocaleTimeString() });
+    }
+
+    canvas.addEventListener("touchstart", e => {
+        e.preventDefault();
+        swipeY = e.touches[0].clientY;
+        const rect = canvas.getBoundingClientRect();
+        const tx = (e.touches[0].clientX - rect.left) / rect.width * 600;
+        const ty = (e.touches[0].clientY - rect.top) / rect.height * 1000;
+
+        if(state === "MENU") {
+            mInput.focus(); // Force le clavier
+            if(ty > 440 && ty < 560 && selectedLevel <= reachedLevel) startGame('SAGA');
+            if(ty > 800) startGame('INFINITE');
+        } else {
+            if(tx < 300) keys["Left"] = true; else keys["Right"] = true;
+        }
+    });
+
+    canvas.addEventListener("touchend", e => {
+        let diff = e.changedTouches[0].clientY - swipeY;
+        if(state === "MENU" && Math.abs(diff) > 40) {
+            if(diff > 0) selectedLevel = Math.max(1, selectedLevel - 1);
+            else selectedLevel = Math.min(10, selectedLevel + 1);
+        }
+        keys = {};
+    });
+
+    function draw() {
+        ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
+        ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, (s.y += 1.5) % 1000, s.s, s.s));
+
+        if(state === "MENU") drawMenu();
+        else gameLoop();
+        requestAnimationFrame(draw);
+    }
+
+    function drawMenu() {
+        ctx.textAlign = "center";
+        [selectedLevel-1, selectedLevel, selectedLevel+1].forEach(lvl => {
+            if(lvl < 1 || lvl > 10) return;
+            let y = 500 + (lvl - selectedLevel) * 160;
+            let isFocus = (lvl === selectedLevel);
+            let locked = (lvl > reachedLevel);
+            let color = lvColors[lvl-1];
+
+            ctx.globalAlpha = isFocus ? 1 : 0.2;
+            if(isFocus) {
+                ctx.shadowBlur = 20; ctx.shadowColor = color;
+                ctx.strokeStyle = color; ctx.lineWidth = 4;
+                ctx.strokeRect(120, y-70, 360, 110);
             }
+            
+            ctx.fillStyle = locked ? "#555" : "#fff";
+            ctx.font = isFocus ? "900 35px Orbitron" : "20px Orbitron";
+            ctx.fillText((locked ? "🔒 LVL " : "LEVEL ") + lvl, 300, y-10);
+            
+            // Étoiles et Goal
+            if(!locked) {
+                let s = userStars[lvl] || 0;
+                ctx.font = "20px Arial";
+                ctx.fillText("⭐".repeat(s) + "☆".repeat(3-s), 300, y+25);
+                ctx.font = "12px Orbitron";
+                ctx.fillText("GOAL: " + (lvl*100) + " PT", 300, y+45);
+            }
+            ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        });
+
+        ctx.fillStyle = "#00ff88"; ctx.font = "bold 22px Orbitron";
+        ctx.fillText(">> MODE INFINI <<", 300, 880);
+        ctx.fillStyle = "#fff"; ctx.font = "14px Orbitron";
+        ctx.fillText("PSEUDO: " + (pseudo || "____"), 300, 60);
+    }
+
+    function gameLoop() {
+        if(keys["Left"]) ballX -= 12; if(keys["Right"]) ballX += 12;
+        ballX = Math.max(40, Math.min(560, ballX));
+
+        let currentGoal = selectedLevel * 100;
+        let speed = state === 'SAGA' ? (7 + selectedLevel) : (9 + score/20);
+        let color = state === 'SAGA' ? lvColors[selectedLevel-1] : "#00f2ff";
+
+        if(Math.random() < 0.06 && !isWin) {
+            obstacles.push({y: -50, gap: Math.random()*440 + 80, hit: false});
         }
 
-        function draw() {
-            ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-            ctx.fillStyle = "rgba(255,255,255,0.8)";
-            stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+        obstacles.forEach((o, i) => {
+            o.y += speed;
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10; ctx.shadowColor = color;
+            ctx.fillRect(0, o.y, o.gap - 55, 35);
+            ctx.fillRect(o.gap + 55, o.y, 600, 35);
+            ctx.shadowBlur = 0;
 
-            if(state === "MENU") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
-                ctx.fillText("CYBER DASH", 300, 350);
-                ctx.fillStyle = "#fff"; ctx.font = "16px Orbitron";
-                ctx.fillText("TAPE TON PSEUDO ICI :", 300, 450);
-                ctx.fillStyle = "#00f2ff"; ctx.font = "bold 45px Orbitron";
-                ctx.fillText(pseudo || "____", 300, 520);
-                if(pseudo.length >= 3) { ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron"; ctx.fillText("CLIQUE ICI POUR JOUER", 300, 600); }
-            } else if(state === "PLAYING") {
-                ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
-                obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 35); ctx.fillRect(o.x+o.w, o.y, 600, 35); });
-                ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 10; ctx.textAlign = "left"; ctx.font = "900 60px Orbitron";
-                ctx.fillText(score, 40, 90);
-            } else if(state === "GAMEOVER") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#ff0044"; ctx.font = "900 70px Orbitron";
-                ctx.fillText("CRASHED", 300, 450);
-                ctx.fillStyle = "#fff"; ctx.font = "30px Orbitron";
-                ctx.fillText("SCORE: " + score, 300, 550);
+            if(o.y > 875 && o.y < 915 && (ballX < o.gap - 45 || ballX > o.gap + 45)) {
+                if(state === 'INFINITE') db.ref('bestScores/' + userIP).set({name: pseudo || "Anonyme", score: score});
+                db.ref('logs').push({user: pseudo || "Anonyme", action: "Crash " + score, time: new Date().toLocaleTimeString()});
+                state = "MENU";
             }
-            ctx.shadowBlur = 0; requestAnimationFrame(draw);
-        }
-        setInterval(update, 1000/60); draw();
-    </script>
+            if(o.y > 1000 && !o.hit) { 
+                o.hit = true; score++; 
+                if(state === 'SAGA' && score >= currentGoal) handleWin();
+            }
+        });
+        obstacles = obstacles.filter(o => o.y < 1100);
+
+        // Balle
+        ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
+        ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.font = "900 60px Orbitron"; ctx.textAlign = "left";
+        ctx.fillText(score, 40, 90);
+    }
+
+    function handleWin() {
+        isWin = true;
+        let starsWon = 1;
+        if(score >= (selectedLevel*100)) starsWon = 3; // On gagne direct 3 si on touche le goal
+        
+        db.ref('users/' + userIP).update({
+            reached: Math.max(reachedLevel, selectedLevel + 1)
+        });
+        db.ref('users/' + userIP + '/stars/' + selectedLevel).set(starsWon);
+        
+        setTimeout(() => { state = "MENU"; }, 2000);
+    }
+
+    mInput.addEventListener('input', e => {
+        pseudo = e.target.value.toUpperCase();
+    });
+
+    draw();
+</script>
 </body>
 </html>
