@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - EVENT EDITION</title>
+    <title>CYBER DASH - CLUB EDITION</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -11,83 +11,55 @@
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         #left-col, #right-col { width: 280px; border: 2px solid #ffffff22; background: rgba(5,5,20,0.98); margin: 10px; border-radius: 15px; display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; letter-spacing: 2px; cursor: pointer; }
-        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; position: relative; }
+        .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; letter-spacing: 2px; }
+        #container { height: 85vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; }
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; padding: 20px; }
-        .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; transition: 0.2s; }
         
-        /* BOUTON INFINI EVENT */
-        .btn-infini-event {
-            position: relative;
-            background: linear-gradient(135deg, #ff007f, #ff66b2, #99004d);
-            border: none; color: white; padding: 20px; font-weight: 900;
-            margin-top: 25px; width: 85%; cursor: pointer;
-            box-shadow: 0 0 15px #ff007f; border-radius: 10px;
-        }
-        .btn-infini-event::before { content: '❤️'; position: absolute; top: -10px; left: -10px; transform: rotate(-20deg); font-size: 20px; }
-        .btn-infini-event::after { content: '❤️'; position: absolute; bottom: -10px; right: -10px; transform: rotate(20deg); font-size: 20px; }
-        .event-tag { display: block; font-size: 10px; background: white; color: #ff007f; width: fit-content; margin: 0 auto 5px; padding: 2px 8px; border-radius: 20px; }
-        .event-date { display: block; font-size: 9px; margin-top: 5px; opacity: 0.8; }
-
-        .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
-        .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff11; font-size: 11px; }
-        .buy-btn { background: #00f2ff; color: #000; border: none; padding: 7px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
+        /* CHAT COMMAND */
+        #cmd-bar { width: 100%; max-width: 400px; margin-top: 10px; display: flex; gap: 5px; }
+        #cmd-input { flex-grow: 1; background: #111; border: 2px solid #00f2ff; color: #fff; padding: 10px; font-family: 'Orbitron'; border-radius: 5px; }
+        
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; padding: 20px; }
+        .active-screen { display: flex !important; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; }
         #paypal-box { background: #ffc439; color: #003087; font-weight: 900; padding: 12px; border-radius: 5px; margin: 10px; cursor: pointer; text-align: center; }
-        #admin-panel { display: none; position: absolute; top: 60px; right: 20px; background: #ff0044; color: #fff; padding: 15px; border-radius: 10px; z-index: 1000; }
-        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
-        #btn-L { left: 20px; } #btn-R { right: 20px; }
-        @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
+        .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .buy-btn { background: #00f2ff; color: #000; border: none; padding: 5px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="left-col">
-        <div class="panel-title">CLASSEMENT</div>
+        <div class="panel-title">LEADERBOARD</div>
         <div id="leaderboard" class="scroll-zone"></div>
     </div>
 
     <div id="game-col">
-        <div id="admin-panel">
-            <button onclick="coins+=5000;sync()" class="buy-btn">+5000 🪙</button>
-            <button onclick="reached=9;sync()" class="buy-btn">MAX NIV</button>
-        </div>
         <div id="container">
-            <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
-
             <div id="screen-login" class="screen active-screen">
-                <h1 style="font-size: 40px;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="PSEUDO..." maxlength="10" style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron';">
-                <div class="btn-ui" onclick="init()">ENTRER</div>
+                <h1>CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center;">
+                <div class="btn-ui" onclick="init()">JOUER</div>
             </div>
-
             <div id="screen-hub" class="screen">
-                <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size: 12px;"></div>
-                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
-                <button class="btn-infini-event" onclick="start('INF')">
-                    <span class="event-tag">EVENT</span>
-                    MODE INFINI
-                    <span class="event-date">Disponible jusqu'au 14/02</span>
-                </button>
+                <div id="hub-stats" style="color:#00f2ff; margin-bottom:10px;"></div>
+                <div class="btn-ui" onclick="start('INF')">MODE INFINI</div>
             </div>
-
-            <div id="screen-win" class="screen">
-                <h2>VICTOIRE !</h2>
-                <div style="margin:20px; font-size: 40px;">⭐⭐⭐</div>
-                <div class="btn-ui" onclick="closeWin()">RETOUR AU HUB</div>
-            </div>
-
             <canvas id="cvs"></canvas>
+        </div>
+        
+        <div id="cmd-bar">
+            <input type="text" id="cmd-input" placeholder="TAPE /PSG, /OM, /REAL..." onkeydown="if(event.key==='Enter') execCmd()">
         </div>
     </div>
 
     <div id="right-col">
-        <div class="panel-title" ondblclick="toggleAdmin()">BOUTIQUE</div>
+        <div class="panel-title">BOUTIQUE</div>
         <div id="shop" class="scroll-zone"></div>
-        <div id="paypal-box" onclick="paypalRedirect()">PAYPAL: +5000 🪙 (2.99€)</div>
-        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:24px;">0 🪙</div>
+        <div id="paypal-box" onclick="window.open('https://paypal.me/frsaamya/2.99')">PAYPAL: +5000 🪙</div>
+        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; font-size:24px;">0 🪙</div>
     </div>
 
 <script>
@@ -96,12 +68,30 @@
     const db = firebase.database();
 
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
-    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], particles=[], keys={}, state="LOGIN", score=0;
-    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"];
+    let user="", ip="", coins=0, record=0, state="LOGIN", score=0, ballX=300, ballY=750, obs=[], keys={};
+    let ballColor="#fff", currentAcc="none", logoImg = new Image();
+    let useLogo = false;
 
-    function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentTrail, user}); }
-    function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
-    function paypalRedirect() { window.open("https://paypal.me/frsaamya/2.99", '_blank'); }
+    const clubLogos = {
+        "/psg": "https://upload.wikimedia.org/wikipedia/fr/thumb/8/86/Paris_Saint-Germain_Logo.svg/1024px-Paris_Saint-Germain_Logo.svg.png",
+        "/om": "https://upload.wikimedia.org/wikipedia/fr/thumb/4/43/Olympique_de_Marseille_logo.svg/1024px-Olympique_de_Marseille_logo.svg.png",
+        "/real": "https://upload.wikimedia.org/wikipedia/fr/thumb/c/c7/Logo_Real_Madrid.svg/1024px-Logo_Real_Madrid.svg.png",
+        "/barca": "https://upload.wikimedia.org/wikipedia/fr/thumb/a/a1/Logo_FC_Barcelone.svg/1024px-Logo_FC_Barcelone.svg.png"
+    };
+
+    function execCmd() {
+        let val = document.getElementById('cmd-input').value.toLowerCase();
+        if(clubLogos[val]) {
+            logoImg.src = clubLogos[val];
+            useLogo = true;
+            document.getElementById('cmd-input').value = "";
+            alert("BALLON " + val.toUpperCase() + " ACTIVÉ !");
+        } else if(val === "/reset") {
+            useLogo = false;
+        }
+    }
+
+    function sync() { db.ref('users/'+ip).update({coins, record, user, ballColor, currentAcc}); }
 
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
@@ -110,11 +100,10 @@
         fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
             ip = d.ip.replace(/\./g, '_');
             db.ref('users/'+ip).on('value', s=>{
-                const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; 
-                owned=v.owned||["#fff", "none"]; ballColor=v.ballColor||"#fff"; currentTrail=v.currentTrail||"none";
+                const v = s.val()||{}; coins=v.coins||0; record=v.record||0;
                 document.getElementById('user-coins').innerText = `${coins} 🪙`;
-                document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV: ${reached}`;
-                renderLvls(); renderShop();
+                document.getElementById('hub-stats').innerText = `BEST: ${record}`;
+                renderShop();
             });
         });
         db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
@@ -124,98 +113,45 @@
     }
 
     function renderShop() {
-        const skins = [
-            {id:"#fff", n:"BASIQUE", p:0, type:"SKIN"}, {id:"#00f2ff", n:"NEON", p:200, type:"SKIN"}, 
-            {id:"#ff00ff", n:"PINK", p:500, type:"SKIN"}, {id:"#9b59b6", n:"AMÉTHYSTE", p:1500, type:"SKIN"},
-            {id:"#e67e22", n:"LAVE", p:3000, type:"SKIN"}, {id:"#ffd700", n:"OR PUR", p:5000, type:"SKIN"}
-        ];
-        const trails = [
-            {id:"none", n:"SANS", p:0, type:"TRAIL"}, {id:"poudre", n:"POUDRE", p:300, type:"TRAIL"}, 
-            {id:"flame", n:"FLAMMES", p:1000, type:"TRAIL"}, {id:"rainbow", n:"ARC-EN-CIEL", p:2500, type:"TRAIL"}
-        ];
-        let h = `<div style="font-size:10px; color:#ff007f; margin:10px;">SKINS EXCLUSIFS</div>`;
-        skins.forEach(s => { const isO=owned.includes(s.id); h += `<div class="item-list"><span>${s.n}</span><button class="buy-btn" onclick="buy('${s.id}',${s.p},'SKIN')">${isO?(ballColor===s.id?'EQUIPÉ':'CHOISIR'):s.p+' 🪙'}</button></div>`; });
-        h += `<div style="font-size:10px; color:#ff007f; margin:10px;">EFFETS SPÉCIAUX</div>`;
-        trails.forEach(t => { const isO=owned.includes(t.id); h += `<div class="item-list"><span>${t.n}</span><button class="buy-btn" onclick="buy('${t.id}',${t.p},'TRAIL')">${isO?(currentTrail===t.id?'EQUIPÉ':'CHOISIR'):t.p+' 🪙'}</button></div>`; });
+        const accs = [{id:"acc_glasses", n:"LUNETTES", p:300}, {id:"acc_crown", n:"COURONNE", p:1000}];
+        let h = `<div style="font-size:10px; color:#aaa; margin-bottom:10px;">ACCESSOIRES</div>`;
+        accs.forEach(a => { h += `<div class="item-list"><span>${a.n}</span><button class="buy-btn" onclick="currentAcc='${a.id}';sync()">${a.p} 🪙</button></div>`; });
         document.getElementById('shop').innerHTML = h;
     }
 
-    function buy(id, p, type) { if(owned.includes(id)) { if(type==='SKIN') ballColor=id; else currentTrail=id; sync(); } else if(coins >= p) { coins -= p; owned.push(id); if(type==='SKIN') ballColor=id; else currentTrail=id; sync(); } }
-    function renderLvls() { let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } document.getElementById('lvls').innerHTML=h; }
-    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; particles=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
-    function closeWin() { document.getElementById('screen-win').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); }
+    function start() { state="PLAY"; score=0; obs=[]; ballX=300; document.getElementById('screen-hub').classList.remove('active-screen'); }
 
-    function drawHeart(x, y, size, color) {
-        ctx.fillStyle = color; ctx.beginPath();
-        ctx.moveTo(x, y + size / 4); ctx.quadraticCurveTo(x, y, x + size / 4, y);
-        ctx.quadraticCurveTo(x + size / 2, y, x + size / 2, y + size / 4);
-        ctx.quadraticCurveTo(x + size / 2, y, x + size * 3/4, y); ctx.quadraticCurveTo(x + size, y, x + size, y + size / 4);
-        ctx.quadraticCurveTo(x + size, y + size / 2, x + size / 2, y + size * 3/4); ctx.quadraticCurveTo(x, y + size / 2, x, y + size / 4); ctx.fill();
+    function drawBall(x, y) {
+        ctx.save();
+        if(useLogo) {
+            ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.clip();
+            ctx.drawImage(logoImg, x-25, y-25, 50, 50);
+        } else {
+            ctx.fillStyle = ballColor; ctx.beginPath(); ctx.arc(x, y, 22, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+
+        // Accessoires par dessus
+        if(currentAcc === "acc_glasses") { ctx.fillStyle="#000"; ctx.fillRect(x-18, y-5, 36, 6); }
+        if(currentAcc === "acc_crown") { ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.moveTo(x-15,y-22); ctx.lineTo(x-15,y-32); ctx.lineTo(x,y-25); ctx.lineTo(x+15,y-32); ctx.lineTo(x+15,y-22); ctx.fill(); }
     }
 
-    function press(d, a) { keys[d]=a; let b=document.getElementById('btn-'+d); if(b) a?b.classList.add('active'):b.classList.remove('active'); }
-    window.onkeydown=e=>{if(e.key.includes("Left"))press("L",true);if(e.key.includes("Right"))press("R",true);};
-    window.onkeyup=e=>{if(e.key.includes("Left"))press("L",false);if(e.key.includes("Right"))press("R",false);};
-    document.getElementById('btn-L').ontouchstart=e=>{e.preventDefault();press("L",true);};
-    document.getElementById('btn-R').ontouchstart=e=>{e.preventDefault();press("R",true);};
-    document.onmouseup=document.ontouchend=()=>{press("L",false);press("R",false);};
+    window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
+    window.onkeyup=e=>{if(e.key.includes("Left"))keys["L"]=false;if(e.key.includes("Right"))keys["R"]=false;};
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            const levelScores = {1:30, 2:50, 3:70, 4:90, 5:110, 6:130, 7:150, 8:170, 9:200};
-            const isValentin = currentLvl === 'INF';
-            const theme = isValentin ? "#ff007f" : "#00f2ff";
-            const target = levelScores[currentLvl]||999;
-            const speed = isValentin ? 7.2 : 3.5+(currentLvl*0.5);
-            const gap = isValentin ? 135 : 195-(currentLvl*7);
-            const sens = isValentin ? 11 : 7 + (currentLvl * 0.7); // SENSI PLUS DOUCE
-            
-            if(score < target) {
-                if(keys["L"]) ballX-=sens; if(keys["R"]) ballX+=sens; ballX=Math.max(25,Math.min(575,ballX));
-                
-                // GESTION TRAINÉES
-                if(currentTrail !== "none") {
-                    let pCol = currentTrail === "poudre" ? "#fff" : (currentTrail === "flame" ? "#ff4500" : (currentTrail === "rainbow" ? "hsl("+Date.now()%360+",100%,50%)" : theme));
-                    particles.push({x: ballX, y: ballY+20, r: Math.random()*6+2, a: 1, c: pCol});
-                }
-
-                if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
-                    let c=Math.random()*(600-gap-120)+(gap/2+60);
-                    obs.push({g:c, y:-50, p:false});
-                    if(Math.random()<0.4) pieces.push({x:c, y:-50});
-                }
-            }
-
-            particles.forEach((p,i) => {
-                p.y += speed/2; p.a -= 0.02; ctx.globalAlpha = p.a; ctx.fillStyle = p.c;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-                if(p.a <= 0) particles.splice(i,1);
-            });
-            ctx.globalAlpha = 1;
-
+            if(keys["L"]) ballX-=10; if(keys["R"]) ballX+=10; ballX=Math.max(25,Math.min(575,ballX));
+            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 300)) obs.push({g:Math.random()*200+200, y:-50, p:false});
             obs.forEach(o => {
-                o.y += speed; ctx.strokeStyle=theme; ctx.lineWidth=35;
-                ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-gap/2, o.y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke();
-                if(score<target && o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { 
-                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); 
-                }
+                o.y += 6; ctx.strokeStyle="#00f2ff"; ctx.lineWidth=35;
+                ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-90, o.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(o.g+90, o.y); ctx.lineTo(600, o.y); ctx.stroke();
+                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-75 || ballX>o.g+75)) { state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); }
                 if(o.y > ballY && !o.p) { o.p=true; score++; }
             });
-
-            pieces.forEach((p,i)=>{ 
-                p.y+=speed; 
-                if(isValentin) drawHeart(p.x-15, p.y-15, 30, "#ff0044"); 
-                else { ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill(); }
-                if(score<target && Math.hypot(p.x-ballX,p.y-ballY)<35){ pieces.splice(i,1); coins++; sync(); } 
-            });
-
-            if(score >= target) {
-                ballY -= 12; ctx.fillStyle="rgba(255,255,255,0.7)"; ctx.fillRect(0,0,600,400);
-                if(ballY<-60) { state="WIN"; document.getElementById('screen-win').classList.add('active-screen'); if(currentLvl===reached)reached++; sync(); }
-            }
-            ctx.fillStyle=ballColor; ctx.beginPath(); ctx.arc(ballX,ballY,22,0,Math.PI*2); ctx.fill();
+            drawBall(ballX, ballY);
             ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,160);
         }
         requestAnimationFrame(loop);
