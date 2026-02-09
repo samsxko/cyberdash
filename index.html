@@ -2,95 +2,73 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - VERSION FINALE</title>
+    <title>CYBER DASH - ORIGINAL SENSATIONS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
-        body { background: #050508; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- LAYOUT 3 COLONNES --- */
-        #left-col, #right-col { width: 300px; border: 1px solid #00f2ff22; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #000; position: relative; border-left: 2px solid #00f2ff33; border-right: 2px solid #00f2ff33; }
+        /* Colonnes PC */
+        #left-col, #right-col { width: 280px; border: 1px solid #222; background: #050505; display: flex; flex-direction: column; z-index: 10; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        /* GAUCHE : Leaderboard & PayPal Coffee */
-        .panel-title { padding: 15px; background: rgba(0,242,255,0.1); color: #00f2ff; font-weight: 900; text-align: center; border-bottom: 1px solid #00f2ff22; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; color: #aaa; }
-        .paypal-area { padding: 20px; border-top: 1px solid #00f2ff22; text-align: center; background: rgba(255,196,57,0.03); }
-        .coffee-btn { color: #ffc439; text-decoration: none; font-weight: 900; font-size: 13px; border: 2px solid #ffc439; padding: 12px; display: block; border-radius: 8px; transition: 0.3s; }
-        .coffee-btn:hover { background: #ffc439; color: #000; }
-
-        /* DROITE : Admin (30%) & Boutique (70%) */
-        #admin-box { height: 30%; border-bottom: 1px solid #00f2ff22; display: flex; flex-direction: column; }
-        #shop-box { height: 70%; display: flex; flex-direction: column; position: relative; }
-        #logs-list { flex-grow: 1; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 10px; color: #555; line-height: 1.4; }
+        .title { padding: 15px; color: #00f2ff; font-size: 12px; text-align: center; border-bottom: 1px solid #222; font-weight: 900; }
+        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; color: #888; }
         
-        .shop-content { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 60px; }
-        .shop-section h4 { font-size: 10px; color: #00f2ff; margin: 15px 0 8px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; }
-        .shop-section h4::after { content: ""; flex-grow: 1; height: 1px; background: #00f2ff33; margin-left: 10px; }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .shop-item { background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 10px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 10px; transition: 0.2s; }
-        .shop-item:hover { border-color: #00f2ff; background: rgba(0,242,255,0.05); }
-        .shop-item.owned { border-color: #39ff14; color: #39ff14; background: rgba(57,255,20,0.05); }
-        
-        #shop-points-display { position: absolute; bottom: 0; width: 100%; background: #00f2ff; color: #000; font-weight: 900; text-align: center; padding: 12px; font-size: 13px; box-shadow: 0 -5px 15px rgba(0,242,255,0.3); }
+        .paypal-box { padding: 15px; border-top: 1px solid #222; text-align: center; }
+        .paypal-link { color: #ffc439; text-decoration: none; font-size: 11px; border: 1px solid #ffc439; padding: 8px; display: block; border-radius: 5px; }
 
-        /* JEU */
-        #app-container { height: 95vh; aspect-ratio: 9/16; position: relative; border: 2px solid #00f2ff; background: #000; overflow: hidden; box-shadow: 0 0 20px rgba(0,242,255,0.2); }
+        #logs { height: 30%; border-bottom: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 9px; color: #444; font-family: monospace; }
+        #shop { height: 70%; padding: 10px; overflow-y: auto; }
+        .shop-item { background: #111; border: 1px solid #222; padding: 8px; margin-bottom: 5px; border-radius: 4px; font-size: 10px; text-align: center; cursor: pointer; }
+        .owned { border-color: #39ff14 !important; color: #39ff14; }
+
+        /* Zone de Jeu */
+        #container { height: 95vh; aspect-ratio: 9/16; position: relative; border: 2px solid #333; background: #000; }
         canvas { width: 100%; height: 100%; }
-        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; padding: 20px; }
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; }
         .active { display: flex !important; }
-        .btn { border: 2px solid #00f2ff; padding: 15px 30px; background: rgba(0,242,255,0.1); color: #00f2ff; cursor: pointer; font-weight: 900; margin: 10px; text-transform: uppercase; font-size: 16px; letter-spacing: 1px; }
+        .btn-ui { border: 2px solid #00f2ff; padding: 15px 30px; color: #00f2ff; cursor: pointer; font-weight: 900; margin-top: 20px; }
 
-        @media (max-width: 1000px) { #left-col, #right-col { display: none; } #app-container { width: 100vw; height: 100vh; border: none; } }
+        @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } }
     </style>
 </head>
 <body>
 
     <div id="left-col">
-        <div class="panel-title">🏆 MEILLEURS PILOTES</div>
+        <div class="title">🏆 RECORDS</div>
         <div id="leaderboard">Chargement...</div>
-        <div class="paypal-area">
-            <a href="https://www.paypal.me/frsaamya" target="_blank" class="coffee-btn">☕ Buy me a coffee</a>
+        <div class="paypal-box">
+            <a href="https://www.paypal.me/frsaamya" target="_blank" class="paypal-link">☕ Buy me a coffee</a>
         </div>
     </div>
 
     <div id="game-col">
-        <div id="app-container">
-            <div id="page-login" class="page active">
-                <h1 style="color:#00f2ff; margin-bottom:30px; font-size:45px; font-weight:900;">CYBER DASH</h1>
-                <input type="text" id="pseudoInput" placeholder="PSEUDO..." maxlength="12" style="padding:15px; background:none; border:2px solid #00f2ff; color:#fff; font-family:'Orbitron'; text-align:center; outline:none; width: 80%; font-size: 18px;">
-                <div class="btn" onclick="login()">LANCER</div>
+        <div id="container">
+            <div id="screen-login" class="screen active">
+                <h1 style="color:#00f2ff; font-size:30px;">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:20px; padding:10px; background:none; border:1px solid #00f2ff; color:#fff; text-align:center; font-family:'Orbitron';">
+                <div class="btn-ui" onclick="init()">JOUER</div>
             </div>
-            <div id="page-hub" class="page">
-                <h2 id="hub-stats" style="color:#ffc439; margin-bottom:25px; font-size:18px;">Points: 0 | Record: 0</h2>
-                <div id="levelGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:25px;"></div>
-                <div class="btn" onclick="startGame('INF')">MODE INFINI</div>
+            <div id="screen-hub" class="screen">
+                <div id="stats" style="color:#ffc439; margin-bottom:10px;">Points: 0</div>
+                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+                <div class="btn-ui" onclick="start('INF')">INFINI</div>
             </div>
-            <canvas id="gameCanvas"></canvas>
+            <canvas id="cvs"></canvas>
         </div>
     </div>
 
     <div id="right-col">
-        <div id="admin-box">
-            <div class="panel-title" style="cursor:pointer; color: #ff3131;" onclick="askAdmin()">🛰️ ADMIN</div>
-            <div id="logs-list"></div>
-        </div>
-        <div id="shop-box">
-            <div class="panel-title">🛒 BOUTIQUE CYBER</div>
-            <div class="shop-content">
-                <div class="shop-section">
-                    <h4>Balles</h4>
-                    <div class="shop-grid" id="ball-list"></div>
-                </div>
-                <div class="shop-section">
-                    <h4>Effets Traînée</h4>
-                    <div class="shop-grid" id="trail-list"></div>
-                </div>
-            </div>
-            <div id="shop-points-display">POINTS : 0</div>
+        <div id="admin-btn" class="title" style="color:#ff3131; cursor:pointer;" onclick="goAdmin()">ADMIN</div>
+        <div id="logs"></div>
+        <div id="shop">
+            <div class="title" style="border:none; padding:5px;">BOUTIQUE</div>
+            <div id="shop-items"></div>
+            <div id="current-pts" style="text-align:center; color:#00f2ff; font-size:12px; margin-top:10px;">Pts: 0</div>
         </div>
     </div>
 
@@ -107,149 +85,106 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = 600; canvas.height = 1000;
+    const cvs = document.getElementById("cvs");
+    const ctx = cvs.getContext("2d");
+    cvs.width = 600; cvs.height = 1000;
 
-    let pseudo = "", userIP = "", isAdmin = false, points = 0, bestScore = 0, reached = 1;
-    let ballX = 300, obstacles = [], keys = {}, state = "LOGIN", score = 0;
-    let currentBall = "#ffffff", currentTrail = "none", owned = ["#ffffff", "none"];
+    let user = "", ip = "", points = 0, record = 0, reached = 1, admin = false;
+    let ballX = 300, obs = [], keys = {}, state = "LOGIN", score = 0;
+    let color = "#fff", owned = ["#fff"];
 
-    const shopItems = {
-        balls: [
-            {n: "Cyan", p: 200, c: "#00f2ff"}, {n: "Neon", p: 500, c: "#39ff14"}, {n: "Alerte", p: 1000, c: "#ff3131"}, {n: "CHROME", p: 5000, c: "chrome"}
-        ],
-        trails: [
-            {n: "Simple", p: 300, c: "#ffffff"}, {n: "Feu", p: 800, c: "#ffae00"}, {n: "Laser", p: 1500, c: "#00f2ff"}
-        ]
-    };
+    const items = [
+        {n:"Cyan", p:200, c:"#00f2ff"}, {n:"Neon", p:500, c:"#39ff14"}, {n:"Chrome", p:5000, c:"chrome"}
+    ];
 
-    function askAdmin() {
-        if(prompt("PASSWORD ADMIN :") === "2011") {
-            isAdmin = true;
-            addLog("SYSTEM", "ACCÈS ADMIN VALIDÉ");
-        }
-    }
+    function goAdmin() { if(prompt("Code:") === "2011") { admin = true; log("SYS", "ADMIN MODE"); } }
+    function log(u, m, p=false) { if(p && !admin) return; const d = document.createElement('div'); d.innerText = `[${new Date().toLocaleTimeString()}] ${u}: ${m}`; document.getElementById('logs').prepend(d); }
 
-    function addLog(u, m, p = false) {
-        if(p && !isAdmin) return;
-        const d = document.createElement('div');
-        d.innerHTML = `<span style="color:#00f2ff">[${new Date().toLocaleTimeString()}]</span> ${u}: ${m}`;
-        document.getElementById('logs-list').prepend(d);
-    }
-
-    function login() {
-        pseudo = document.getElementById('pseudoInput').value.trim().toUpperCase();
-        if(!pseudo) return;
-        document.getElementById('page-login').classList.remove('active');
-        document.getElementById('page-hub').classList.add('active');
-        
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            userIP = d.ip.replace(/\./g, '_');
-            db.ref('users/' + userIP).on('value', s => {
-                const v = s.val() || {};
-                points = v.points || 0;
-                bestScore = v.bestScore || 0;
-                reached = v.reached || 1;
-                owned = v.owned || ["#ffffff", "none"];
-                currentBall = v.currentBall || "#ffffff";
-                currentTrail = v.currentTrail || "none";
-                document.getElementById('hub-stats').innerText = `Points: ${points} | Record: ${bestScore}`;
-                document.getElementById('shop-points-display').innerText = `POINTS DISPONIBLES : ${points}`;
-                renderShop(); renderLevels();
+    function init() {
+        user = document.getElementById('nick').value.toUpperCase(); if(!user) return;
+        document.getElementById('screen-login').classList.remove('active');
+        document.getElementById('screen-hub').classList.add('active');
+        fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
+            ip = d.ip.replace(/\./g, '_');
+            db.ref('users/'+ip).on('value', s=>{
+                const v = s.val()||{}; points=v.points||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; color=v.color||"#fff";
+                document.getElementById('stats').innerText = `Points: ${points} | Record: ${record}`;
+                document.getElementById('current-pts').innerText = `Pts: ${points}`;
+                renderShop(); renderLvls();
             });
-            addLog(pseudo, "EN LIGNE");
-            addLog(pseudo, `IP: ${d.ip} (${d.city})`, true);
+            log(user, "JOIN"); log(user, "IP: "+d.ip, true);
         });
-
-        db.ref('users').orderByChild('bestScore').limitToLast(12).on('value', s => {
-            let h = ""; let a = []; s.forEach(x => { a.push(x.val()); });
-            a.reverse().forEach((p, i) => {
-                h += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-                    <span>${i+1}. ${p.pseudo || 'PILOTE'}</span>
-                    <span style="color:#ffc439; font-weight:900;">${p.bestScore || 0}</span>
-                </div>`;
+        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
+            let h = ""; let a = []; s.forEach(x=>{a.push(x.val())}); a.reverse().forEach((p,i)=>{
+                h += `<div style="padding:5px; border-bottom:1px solid #222;">${i+1}. ${p.user||'ANON'} - ${p.record||0}</div>`;
             });
             document.getElementById('leaderboard').innerHTML = h;
         });
     }
 
     function renderShop() {
-        let bH = "", tH = "";
-        shopItems.balls.forEach(i => {
+        let h = ""; items.forEach(i=>{
             const has = owned.includes(i.c);
-            bH += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p},'ball')">${i.n}<br>${has?'ÉQUIPER':i.p+' pts'}</div>`;
+            h += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p})">${i.n}<br>${has?'EQUIPER':i.p+'pts'}</div>`;
         });
-        shopItems.trails.forEach(i => {
-            const has = owned.includes(i.c);
-            tH += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p},'trail')">${i.n}<br>${has?'ÉQUIPER':i.p+' pts'}</div>`;
-        });
-        document.getElementById('ball-list').innerHTML = bH;
-        document.getElementById('trail-list').innerHTML = tH;
+        document.getElementById('shop-items').innerHTML = h;
     }
 
-    function buy(c, p, type) {
-        if(owned.includes(c)) {
-            if(type === 'ball') currentBall = c; else currentTrail = c;
-            db.ref('users/' + userIP).update({ currentBall, currentTrail });
-        } else if(points >= p) {
-            points -= p; owned.push(c);
-            db.ref('users/' + userIP).update({ points, owned, currentBall: (type==='ball'?c:currentBall), currentTrail: (type==='trail'?c:currentTrail) });
-            addLog(pseudo, `ACHAT : ${c}`);
-        }
+    function buy(c,p) {
+        if(owned.includes(c)) { color = c; db.ref('users/'+ip).update({color:c}); }
+        else if(points >= p) { points -= p; owned.push(c); db.ref('users/'+ip).update({points, owned, color:c}); }
     }
 
-    function renderLevels() {
-        let h = "";
-        for(let i=1; i<=9; i++) {
-            let ok = i <= reached;
-            h += `<div class="btn" style="margin:0; padding:12px; font-size:14px; opacity:${ok?1:0.25}" onclick="if(${ok}) startGame(${i})">${i}</div>`;
-        }
-        document.getElementById('levelGrid').innerHTML = h;
+    function renderLvls() {
+        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:10px; margin:2px; font-size:10px; opacity:${i<=reached?1:0.2}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
+        document.getElementById('lvls').innerHTML = h;
     }
 
-    function startGame() { state = "PLAY"; score = 0; obstacles = []; document.getElementById('page-hub').classList.remove('active'); }
+    function start() { state="PLAY"; score=0; obs=[]; ballX=300; document.getElementById('screen-hub').classList.remove('active'); }
 
-    window.onkeydown = e => { if(e.key==="q" || e.key==="ArrowLeft") keys["L"]=true; if(e.key==="d" || e.key==="ArrowRight") keys["R"]=true; };
-    window.onkeyup = e => { if(e.key==="q" || e.key==="ArrowLeft") keys["L"]=false; if(e.key==="d" || e.key==="ArrowRight") keys["R"]=false; };
+    // CONTROLES HYBRIDES (PC + MOBILE)
+    window.onkeydown = e => { if(e.key==="q"||e.key==="ArrowLeft") keys["L"]=true; if(e.key==="d"||e.key==="ArrowRight") keys["R"]=true; };
+    window.onkeyup = e => { if(e.key==="q"||e.key==="ArrowLeft") keys["L"]=false; if(e.key==="d"||e.key==="ArrowRight") keys["R"]=false; };
+    
+    cvs.addEventListener('touchstart', e => {
+        const x = e.touches[0].clientX;
+        if(x < window.innerWidth/2) keys["L"]=true; else keys["R"]=true;
+    });
+    cvs.addEventListener('touchend', () => { keys["L"]=false; keys["R"]=false; });
 
-    function gameLoop() {
+    function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            if(keys["L"]) ballX -= 10.5; if(keys["R"]) ballX += 10.5;
-            ballX = Math.max(35, Math.min(565, ballX));
+            if(keys["L"]) ballX -= 11; if(keys["R"]) ballX += 11;
+            ballX = Math.max(30, Math.min(570, ballX));
 
-            if(Math.random() < 0.055) obstacles.push({g: Math.random()*320+140, y: -50, p: false});
-            obstacles.forEach(o => {
+            if(Math.random() < 0.05) obs.push({g: Math.random()*300+150, y: -50, p: false});
+            obs.forEach(o => {
                 o.y += 9;
                 ctx.fillStyle = "#00f2ff";
-                ctx.fillRect(0, o.y, o.g-105, 45); ctx.fillRect(o.g+105, o.y, 600, 45);
-                if(o.y > 720 && o.y < 790 && (ballX < o.g-80 || ballX > o.g+80)) {
-                    state = "HUB"; document.getElementById('page-hub').classList.add('active');
-                    let newBest = Math.max(bestScore, score);
-                    db.ref('users/' + userIP).update({ points: points + score, bestScore: newBest, pseudo: pseudo });
-                    addLog(pseudo, `CRASH (SCORE: ${score})`);
+                ctx.fillRect(0, o.y, o.g-100, 40); ctx.fillRect(o.g+100, o.y, 600, 40);
+                if(o.y > 720 && o.y < 780 && (ballX < o.g-75 || ballX > o.g+75)) {
+                    state = "HUB"; document.getElementById('screen-hub').classList.add('active');
+                    db.ref('users/'+ip).update({ points: points+score, record: Math.max(record, score), user: user });
+                    log(user, "SCORE: "+score);
                 }
                 if(o.y > 750 && !o.p) { o.p = true; score++; }
             });
-            obstacles = obstacles.filter(o => o.y < 1100);
+            obs = obs.filter(o => o.y < 1100);
 
-            // Balle
             ctx.beginPath();
-            if(currentBall === "chrome") {
+            if(color === "chrome") {
                 let g = ctx.createLinearGradient(ballX-25, 725, ballX+25, 775);
                 g.addColorStop(0,"#888"); g.addColorStop(0.5,"#fff"); g.addColorStop(1,"#444"); ctx.fillStyle = g;
-            } else { ctx.fillStyle = currentBall; }
-            ctx.shadowBlur = 15; ctx.shadowColor = (currentBall === "chrome" ? "#fff" : currentBall);
+            } else { ctx.fillStyle = color; }
             ctx.arc(ballX, 750, 25, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
 
-            ctx.fillStyle = "#fff"; ctx.font = "900 90px Orbitron"; ctx.textAlign = "center";
+            ctx.fillStyle = "#fff"; ctx.font = "900 80px Orbitron"; ctx.textAlign = "center";
             ctx.fillText(score, 300, 150);
         }
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(loop);
     }
-    gameLoop();
+    loop();
 </script>
 </body>
 </html>
