@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - CLUB EDITION</title>
+    <title>CYBER DASH - ULTIMATE CLUB & EVENT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -17,16 +17,24 @@
         canvas { width: 100%; height: 100%; }
         
         /* CHAT COMMAND */
-        #cmd-bar { width: 100%; max-width: 400px; margin-top: 10px; display: flex; gap: 5px; }
-        #cmd-input { flex-grow: 1; background: #111; border: 2px solid #00f2ff; color: #fff; padding: 10px; font-family: 'Orbitron'; border-radius: 5px; }
+        #cmd-bar { width: 100%; max-width: 400px; margin-top: 10px; display: flex; gap: 5px; padding: 0 10px; }
+        #cmd-input { flex-grow: 1; background: #111; border: 2px solid #ff007f; color: #fff; padding: 12px; font-family: 'Orbitron'; border-radius: 5px; font-size: 12px; }
         
         .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; padding: 20px; }
         .active-screen { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; }
-        #paypal-box { background: #ffc439; color: #003087; font-weight: 900; padding: 12px; border-radius: 5px; margin: 10px; cursor: pointer; text-align: center; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 10px; width: 85%; font-size: 12px; }
+        
+        .btn-event { 
+            background: linear-gradient(135deg, #ff007f, #ff66b2); border: none; color: white; padding: 15px; font-weight: 900; 
+            width: 85%; margin-top: 15px; border-radius: 10px; cursor: pointer; position: relative;
+        }
+        .btn-event::after { content: '❤️'; position: absolute; right: 10px; top: 12px; }
+
+        #paypal-box { background: #ffc439; color: #003087; font-weight: 900; padding: 12px; border-radius: 5px; margin: 10px; cursor: pointer; text-align: center; font-size: 13px; }
         .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
         .buy-btn { background: #00f2ff; color: #000; border: none; padding: 5px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
+        #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; font-size:24px; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -39,17 +47,17 @@
     <div id="game-col">
         <div id="container">
             <div id="screen-login" class="screen active-screen">
-                <h1>CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="PSEUDO..." style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center;">
+                <h1 style="font-size:32px">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron';">
                 <div class="btn-ui" onclick="init()">JOUER</div>
             </div>
             <div id="screen-hub" class="screen">
                 <div id="hub-stats" style="color:#00f2ff; margin-bottom:10px;"></div>
-                <div class="btn-ui" onclick="start('INF')">MODE INFINI</div>
+                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
+                <button class="btn-event" onclick="start('INF')">MODE INFINI (14/02)</button>
             </div>
             <canvas id="cvs"></canvas>
         </div>
-        
         <div id="cmd-bar">
             <input type="text" id="cmd-input" placeholder="TAPE /PSG, /OM, /REAL..." onkeydown="if(event.key==='Enter') execCmd()">
         </div>
@@ -58,8 +66,8 @@
     <div id="right-col">
         <div class="panel-title">BOUTIQUE</div>
         <div id="shop" class="scroll-zone"></div>
-        <div id="paypal-box" onclick="window.open('https://paypal.me/frsaamya/2.99')">PAYPAL: +5000 🪙</div>
-        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; font-size:24px;">0 🪙</div>
+        <div id="paypal-box" onclick="window.open('https://paypal.me/frsaamya/2.99')">PAYPAL: +5000 🪙 (2.99€)</div>
+        <div id="user-coins">0 🪙</div>
     </div>
 
 <script>
@@ -68,9 +76,9 @@
     const db = firebase.database();
 
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
-    let user="", ip="", coins=0, record=0, state="LOGIN", score=0, ballX=300, ballY=750, obs=[], keys={};
-    let ballColor="#fff", currentAcc="none", logoImg = new Image();
-    let useLogo = false;
+    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, state="LOGIN", score=0, ballX=300, ballY=750, obs=[], pieces=[], particles=[], keys={};
+    let ballColor="#fff", currentAcc="none", currentTrail="none", owned=["#fff", "none"];
+    let logoImg = new Image(), useLogo = false;
 
     const clubLogos = {
         "/psg": "https://upload.wikimedia.org/wikipedia/fr/thumb/8/86/Paris_Saint-Germain_Logo.svg/1024px-Paris_Saint-Germain_Logo.svg.png",
@@ -82,16 +90,12 @@
     function execCmd() {
         let val = document.getElementById('cmd-input').value.toLowerCase();
         if(clubLogos[val]) {
-            logoImg.src = clubLogos[val];
-            useLogo = true;
+            logoImg.src = clubLogos[val]; useLogo = true;
             document.getElementById('cmd-input').value = "";
-            alert("BALLON " + val.toUpperCase() + " ACTIVÉ !");
-        } else if(val === "/reset") {
-            useLogo = false;
-        }
+        } else if(val === "/reset") { useLogo = false; document.getElementById('cmd-input').value = ""; }
     }
 
-    function sync() { db.ref('users/'+ip).update({coins, record, user, ballColor, currentAcc}); }
+    function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentAcc, currentTrail, user}); }
 
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
@@ -100,10 +104,11 @@
         fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
             ip = d.ip.replace(/\./g, '_');
             db.ref('users/'+ip).on('value', s=>{
-                const v = s.val()||{}; coins=v.coins||0; record=v.record||0;
+                const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; 
+                owned=v.owned||["#fff", "none"]; ballColor=v.ballColor||"#fff"; currentAcc=v.currentAcc||"none"; currentTrail=v.currentTrail||"none";
                 document.getElementById('user-coins').innerText = `${coins} 🪙`;
-                document.getElementById('hub-stats').innerText = `BEST: ${record}`;
-                renderShop();
+                document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV: ${reached}`;
+                renderLvls(); renderShop();
             });
         });
         db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
@@ -113,27 +118,43 @@
     }
 
     function renderShop() {
-        const accs = [{id:"acc_glasses", n:"LUNETTES", p:300}, {id:"acc_crown", n:"COURONNE", p:1000}];
-        let h = `<div style="font-size:10px; color:#aaa; margin-bottom:10px;">ACCESSOIRES</div>`;
-        accs.forEach(a => { h += `<div class="item-list"><span>${a.n}</span><button class="buy-btn" onclick="currentAcc='${a.id}';sync()">${a.p} 🪙</button></div>`; });
+        const items = [
+            {id:"#00f2ff", n:"SKIN NEON", p:200, type:"SKIN"},
+            {id:"poudre", n:"TRAINEE POUDRE", p:500, type:"TRAIL"},
+            {id:"acc_glasses", n:"LUNETTES THUG", p:400, type:"ACC"},
+            {id:"acc_crown", n:"COURONNE", p:1500, type:"ACC"}
+        ];
+        let h = `<div style="font-size:10px; color:#aaa; margin:10px;">BOUTIQUE</div>`;
+        items.forEach(i => {
+            const isO=owned.includes(i.id);
+            h += `<div class="item-list"><span>${i.n}</span><button class="buy-btn" onclick="buy('${i.id}',${i.p},'${i.type}')">${isO?'CHOISIR':i.p+' 🪙'}</button></div>`;
+        });
         document.getElementById('shop').innerHTML = h;
     }
 
-    function start() { state="PLAY"; score=0; obs=[]; ballX=300; document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function buy(id, p, type) {
+        if(owned.includes(id)) { if(type==='SKIN') ballColor=id; else if(type==='TRAIL') currentTrail=id; else currentAcc=id; sync(); }
+        else if(coins >= p) { coins -= p; owned.push(id); if(type==='SKIN') ballColor=id; else if(type==='TRAIL') currentTrail=id; else currentAcc=id; sync(); }
+    }
+
+    function renderLvls() { let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } document.getElementById('lvls').innerHTML=h; }
+    
+    function start(l) { 
+        currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; particles=[]; ballX=300; ballY=750;
+        document.getElementById('screen-hub').classList.remove('active-screen'); 
+    }
 
     function drawBall(x, y) {
         ctx.save();
         if(useLogo) {
-            ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.clip();
-            ctx.drawImage(logoImg, x-25, y-25, 50, 50);
+            ctx.beginPath(); ctx.arc(x, y, 22, 0, Math.PI*2); ctx.clip();
+            ctx.drawImage(logoImg, x-22, y-22, 44, 44);
         } else {
             ctx.fillStyle = ballColor; ctx.beginPath(); ctx.arc(x, y, 22, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
-
-        // Accessoires par dessus
-        if(currentAcc === "acc_glasses") { ctx.fillStyle="#000"; ctx.fillRect(x-18, y-5, 36, 6); }
-        if(currentAcc === "acc_crown") { ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.moveTo(x-15,y-22); ctx.lineTo(x-15,y-32); ctx.lineTo(x,y-25); ctx.lineTo(x+15,y-32); ctx.lineTo(x+15,y-22); ctx.fill(); }
+        if(currentAcc === "acc_glasses") { ctx.fillStyle="#000"; ctx.fillRect(x-18, y-5, 36, 7); }
+        if(currentAcc === "acc_crown") { ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.moveTo(x-15,y-22); ctx.lineTo(x-15,y-35); ctx.lineTo(x,y-28); ctx.lineTo(x+15,y-35); ctx.lineTo(x+15,y-22); ctx.fill(); }
     }
 
     window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
@@ -142,15 +163,39 @@
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            if(keys["L"]) ballX-=10; if(keys["R"]) ballX+=10; ballX=Math.max(25,Math.min(575,ballX));
-            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 300)) obs.push({g:Math.random()*200+200, y:-50, p:false});
+            const isV = currentLvl === 'INF';
+            const speed = isV ? 7.5 : 3.8+(currentLvl*0.5);
+            const gap = isV ? 135 : 190-(currentLvl*7);
+            const sens = isV ? 11 : 8 + (currentLvl * 0.7);
+
+            if(keys["L"]) ballX-=sens; if(keys["R"]) ballX+=sens; ballX=Math.max(25,Math.min(575,ballX));
+
+            // Traînées
+            if(currentTrail === "poudre") { particles.push({x:ballX, y:ballY+20, a:1}); }
+            particles.forEach((p,i)=>{ p.y+=speed/2; p.a-=0.02; ctx.globalAlpha=p.a; ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); if(p.a<=0)particles.splice(i,1); });
+            ctx.globalAlpha=1;
+
+            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
+                let c=Math.random()*(600-gap-100)+(gap/2+50);
+                obs.push({g:c, y:-50, p:false});
+                if(Math.random()<0.3) pieces.push({x:c, y:-50});
+            }
+
             obs.forEach(o => {
-                o.y += 6; ctx.strokeStyle="#00f2ff"; ctx.lineWidth=35;
-                ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-90, o.y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(o.g+90, o.y); ctx.lineTo(600, o.y); ctx.stroke();
-                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-75 || ballX>o.g+75)) { state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); }
+                o.y += speed; ctx.strokeStyle = isV ? "#ff007f" : "#00f2ff"; ctx.lineWidth=35;
+                ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-gap/2, o.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke();
+                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { 
+                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); 
+                }
                 if(o.y > ballY && !o.p) { o.p=true; score++; }
             });
+
+            pieces.forEach((p,i)=>{ 
+                p.y+=speed; ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill();
+                if(Math.hypot(p.x-ballX,p.y-ballY)<35){ pieces.splice(i,1); coins++; sync(); } 
+            });
+
             drawBall(ballX, ballY);
             ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,160);
         }
