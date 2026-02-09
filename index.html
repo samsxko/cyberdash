@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - EVENT EDITION</title>
+    <title>CYBER DASH - FINAL VERSION</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -20,8 +20,7 @@
         .btn-ui { border: 2px solid #fff; padding: 12px 25px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 15px; width: 85%; transition: 0.2s; }
         
         .btn-infini-event {
-            position: relative;
-            background: linear-gradient(135deg, #ff007f, #ff66b2, #99004d);
+            position: relative; background: linear-gradient(135deg, #ff007f, #ff66b2, #99004d);
             border: none; color: white; padding: 20px; font-weight: 900;
             margin-top: 25px; width: 85%; cursor: pointer;
             box-shadow: 0 0 15px #ff007f; border-radius: 10px;
@@ -29,13 +28,12 @@
         .btn-infini-event::before { content: '❤️'; position: absolute; top: -10px; left: -10px; transform: rotate(-20deg); font-size: 20px; }
         .btn-infini-event::after { content: '❤️'; position: absolute; bottom: -10px; right: -10px; transform: rotate(20deg); font-size: 20px; }
         .event-tag { display: block; font-size: 10px; background: white; color: #ff007f; width: fit-content; margin: 0 auto 5px; padding: 2px 8px; border-radius: 20px; }
-        .event-date { display: block; font-size: 9px; margin-top: 5px; opacity: 0.8; }
 
         .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .item-list { background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff11; font-size: 11px; }
         .buy-btn { background: #00f2ff; color: #000; border: none; padding: 7px 10px; border-radius: 4px; font-weight: 900; cursor: pointer; }
-        #paypal-box { background: #ffc439; color: #003087; font-weight: 900; padding: 12px; border-radius: 5px; margin: 10px; cursor: pointer; text-align: center; }
-        #admin-panel { display: none; position: absolute; top: 60px; right: 20px; background: #ff0044; color: #fff; padding: 15px; border-radius: 10px; z-index: 1000; }
+        #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:24px; }
+        
         .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
@@ -43,72 +41,45 @@
 </head>
 <body>
 
-    <div id="left-col">
-        <div class="panel-title">CLASSEMENT</div>
-        <div id="leaderboard" class="scroll-zone"></div>
-    </div>
+    <div id="left-col"><div class="panel-title">CLASSEMENT</div><div id="leaderboard" class="scroll-zone"></div></div>
 
     <div id="game-col">
-        <div id="admin-panel">
-            <button onclick="coins+=5000;sync()" class="buy-btn">+5000 🪙</button>
-            <button onclick="reached=9;sync()" class="buy-btn">MAX NIV</button>
-        </div>
         <div id="container">
             <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
-
             <div id="screen-login" class="screen active-screen">
                 <h1 style="font-size: 40px;">CYBER DASH</h1>
                 <input type="text" id="nick" placeholder="PSEUDO..." maxlength="10" style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron';">
                 <div class="btn-ui" onclick="init()">ENTRER</div>
             </div>
-
             <div id="screen-hub" class="screen">
                 <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size: 12px;"></div>
                 <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
-                <button class="btn-infini-event" onclick="start('INF')">
-                    <span class="event-tag">EVENT</span>
-                    MODE INFINI
-                    <span class="event-date">Disponible jusqu'au 14/02</span>
-                </button>
+                <button class="btn-infini-event" onclick="start('INF')"><span class="event-tag">EVENT</span>MODE INFINI</button>
             </div>
-
-            <div id="screen-win" class="screen">
-                <h2 style="color:#ffd700">MISSION RÉUSSIE</h2>
-                <div style="margin:20px; font-size: 40px;">🚀✨</div>
-                <div class="btn-ui" onclick="closeWin()">RETOUR AU HUB</div>
-            </div>
-
+            <div id="screen-win" class="screen"><h2 style="color:#ffd700">VICTOIRE</h2><div class="btn-ui" onclick="closeWin()">HUB</div></div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
 
     <div id="right-col">
-        <div class="panel-title" ondblclick="toggleAdmin()">BOUTIQUE</div>
+        <div class="panel-title">BOUTIQUE</div>
         <div id="shop" class="scroll-zone"></div>
-        <div id="paypal-box" onclick="paypalRedirect()">PAYPAL: +5000 🪙 (2.99€)</div>
-        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:24px;">0 🪙</div>
+        <div id="user-coins">0 🪙</div>
     </div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0", authDomain: "cyberdash-2baf5.firebaseapp.com", databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app", projectId: "cyberdash-2baf5", storageBucket: "cyberdash-2baf5.firebasestorage.app", messagingSenderId: "360233647601", appId: "1:360233647601:web:60aa25f439019ed7511850" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
-    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], particles=[], keys={}, state="LOGIN", score=0;
-    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"];
     
-    // ÉTOILES ESPACE
-    let stars = [];
+    let user="", ip="", coins=0, record=0, reached=1, currentLvl=1, ballX=300, ballY=750, obs=[], pieces=[], stars=[], keys={}, state="LOGIN", score=0;
+    let ballColor="#fff", currentTrail="none", owned=["#fff", "none"];
+
     for(let i=0; i<80; i++) stars.push({x:Math.random()*600, y:Math.random()*1000, s:Math.random()*2});
 
-    let shake = 0;
-    let warpLines = [];
-
     function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentTrail, user}); }
-    function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
-    function paypalRedirect() { window.open("https://paypal.me/frsaamya/2.99", '_blank'); }
-
+    
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
         document.getElementById('screen-login').classList.remove('active-screen');
@@ -123,101 +94,80 @@
                 renderLvls(); renderShop();
             });
         });
-        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
-            let h=""; s.forEach(x=>{ let p=x.val(); h=`<div class="item-list"><span>${p.user}</span><b>${p.record}</b></div>`+h; });
-            document.getElementById('leaderboard').innerHTML=h;
-        });
     }
 
     function renderShop() {
-        const skins = [{id:"#fff", n:"BASIQUE", p:0, type:"SKIN"}, {id:"#00f2ff", n:"NEON", p:200, type:"SKIN"}, {id:"#ff00ff", n:"PINK", p:500, type:"SKIN"}, {id:"#9b59b6", n:"AMÉTHYSTE", p:1500, type:"SKIN"}, {id:"#e67e22", n:"LAVE", p:3000, type:"SKIN"}, {id:"#ffd700", n:"OR PUR", p:5000, type:"SKIN"}, {id:"#555", n:"OBSIDIENNE", p:8000, type:"SKIN"}];
-        const trails = [{id:"none", n:"SANS", p:0, type:"TRAIL"}, {id:"poudre", n:"POUDRE", p:300, type:"TRAIL"}, {id:"flame", n:"FLAMMES", p:1000, type:"TRAIL"}, {id:"rainbow", n:"ARC-EN-CIEL", p:2500, type:"TRAIL"}, {id:"ghost", n:"SPECTRE", p:4000, type:"TRAIL"}];
-        let h = `<div style="font-size:10px; color:#ff007f; margin:10px;">SKINS EXCLUSIFS</div>`;
-        skins.forEach(s => { const isO=owned.includes(s.id); h += `<div class="item-list"><span>${s.n}</span><button class="buy-btn" onclick="buy('${s.id}',${s.p},'SKIN')">${isO?(ballColor===s.id?'EQUIPÉ':'CHOISIR'):s.p+' 🪙'}</button></div>`; });
-        h += `<div style="font-size:10px; color:#ff007f; margin:10px;">EFFETS SPÉCIAUX</div>`;
-        trails.forEach(t => { const isO=owned.includes(t.id); h += `<div class="item-list"><span>${t.n}</span><button class="buy-btn" onclick="buy('${t.id}',${t.p},'TRAIL')">${isO?(currentTrail===t.id?'EQUIPÉ':'CHOISIR'):t.p+' 🪙'}</button></div>`; });
+        const items = [
+            {id:"#fff", n:"BASIQUE", p:0}, {id:"#00f2ff", n:"NEON", p:200}, {id:"#ff00ff", n:"PINK", p:500}, 
+            {id:"#ffd700", n:"OR", p:5000}, {id:"poudre", n:"POUDRE", p:300}, {id:"flame", n:"FEU", p:1000}
+        ];
+        let h = "";
+        items.forEach(s => { 
+            const isO=owned.includes(s.id); 
+            const isEq = (ballColor===s.id || currentTrail===s.id);
+            h += `<div class="item-list"><span>${s.n}</span><button class="buy-btn" onclick="buy('${s.id}',${s.p})">${isO?(isEq?'EQUIPÉ':'CHOISIR'):s.p+' 🪙'}</button></div>`; 
+        });
         document.getElementById('shop').innerHTML = h;
     }
 
-    function buy(id, p, type) { if(owned.includes(id)) { if(type==='SKIN') ballColor=id; else currentTrail=id; sync(); renderShop(); } else if(coins >= p) { coins -= p; owned.push(id); if(type==='SKIN') ballColor=id; else currentTrail=id; sync(); renderShop(); } }
-    function renderLvls() { let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } document.getElementById('lvls').innerHTML=h; }
-    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; particles=[]; warpLines=[]; ballX=300; ballY=750; shake=0; document.getElementById('screen-hub').classList.remove('active-screen'); }
-    function closeWin() { document.getElementById('screen-win').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); }
-
-    function drawHeart(x, y, size, color) {
-        ctx.fillStyle = color; ctx.beginPath();
-        ctx.moveTo(x, y + size / 4); ctx.quadraticCurveTo(x, y, x + size / 4, y);
-        ctx.quadraticCurveTo(x + size / 2, y, x + size / 2, y + size / 4);
-        ctx.quadraticCurveTo(x + size / 2, y, x + size * 3/4, y); ctx.quadraticCurveTo(x + size, y, x + size, y + size / 4);
-        ctx.quadraticCurveTo(x, y + size / 2, x, y + size / 4); ctx.fill();
+    function buy(id, p) { 
+        if(owned.includes(id)) { if(id.startsWith('#')) ballColor=id; else currentTrail=id; }
+        else if(coins >= p) { coins -= p; owned.push(id); if(id.startsWith('#')) ballColor=id; else currentTrail=id; }
+        sync(); renderShop();
     }
 
-    function press(d, a) { keys[d]=a; }
-    window.onkeydown=e=>{if(e.key.includes("Left"))press("L",true);if(e.key.includes("Right"))press("R",true);};
-    window.onkeyup=e=>{if(e.key.includes("Left"))press("L",false);if(e.key.includes("Right"))press("R",false);};
+    function renderLvls() { 
+        let h=""; for(let i=1; i<=9; i++){ h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; } 
+        document.getElementById('lvls').innerHTML=h; 
+    }
+
+    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function closeWin() { document.getElementById('screen-win').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); }
+
+    window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
+    window.onkeyup=e=>{if(e.key.includes("Left"))keys["L"]=false;if(e.key.includes("Right"))keys["R"]=false;};
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
-        
-        // DESSIN ÉTOILES
-        ctx.fillStyle = "#fff";
-        stars.forEach(s => { ctx.fillRect(s.x, s.y, s.s, s.s); s.y += 0.5; if(s.y>1000) s.y=0; });
+        ctx.fillStyle = "#fff"; stars.forEach(s => { ctx.fillRect(s.x, s.y, s.s, s.s); s.y += 0.5; if(s.y>1000) s.y=0; });
 
         if(state === "PLAY") {
-            const levelScores = {1:30, 2:50, 3:70, 4:90, 5:110, 6:130, 7:150, 8:170, 9:200};
-            const isValentin = currentLvl === 'INF';
-            const target = levelScores[currentLvl]||999;
-            const theme = isValentin ? "#ff007f" : "#00f2ff";
-            
-            if(score >= target) shake = Math.min(shake + 0.5, 15);
-            if(shake > 0) ctx.translate(Math.random()*shake-shake/2, Math.random()*shake-shake/2);
+            const themes = {1:"#00f2ff", 2:"#00ff88", 3:"#ffff00", 4:"#ff8800", 5:"#ff0044", 6:"#ff00ff", 7:"#8800ff", 8:"#ffffff", 9:"#ffd700", INF:"#ff007f"};
+            const theme = themes[currentLvl] || "#00f2ff";
+            const speed = (currentLvl==='INF') ? 7.5 : 4 + (currentLvl*0.4);
+            const gap = (currentLvl==='INF') ? 140 : 190 - (currentLvl*5);
 
-            const speed = isValentin ? 7.2 : 3.5+(currentLvl*0.5);
-            const gap = isValentin ? 135 : 195-(currentLvl*7);
-            const sens = isValentin ? 11 : 7 + (currentLvl * 0.7);
+            if(keys["L"]) ballX-=10; if(keys["R"]) ballX+=10; ballX=Math.max(25,Math.min(575,ballX));
 
-            if(score < target) {
-                if(keys["L"]) ballX-=sens; if(keys["R"]) ballX+=sens; ballX=Math.max(25,Math.min(575,ballX));
-                if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
-                    let c=Math.random()*(600-gap-120)+(gap/2+60);
-                    obs.push({g:c, y:-50, p:false});
-                    if(Math.random()<0.4) pieces.push({x:c, y:-50});
-                }
+            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
+                let c=Math.random()*(600-gap-100)+(gap/2+50);
+                obs.push({g:c, y:-50, p:false});
+                if(Math.random()<0.35) pieces.push({x:c, y:-50});
             }
 
             obs.forEach(o => {
-                o.y += (score >= target) ? 40 : speed;
-                // MURS NÉONS
-                ctx.shadowBlur = 15; ctx.shadowColor = theme;
-                ctx.strokeStyle=theme; ctx.lineWidth=35;
+                o.y += speed; ctx.shadowBlur = 15; ctx.shadowColor = theme; ctx.strokeStyle = theme; ctx.lineWidth = 35;
                 ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-gap/2, o.y); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke();
                 ctx.shadowBlur = 0;
-                
-                if(score<target && o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { 
-                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); 
+                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { 
+                    state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); sync(); 
                 }
                 if(o.y > ballY && !o.p) { o.p=true; score++; }
             });
 
             pieces.forEach((p,i)=>{ 
-                p.y+= (score >= target) ? 40 : speed;
-                if(isValentin) drawHeart(p.x-15, p.y-15, 30, "#ff0044"); 
-                else { ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill(); }
-                if(score<target && Math.hypot(p.x-ballX,p.y-ballY)<35){ pieces.splice(i,1); coins++; sync(); } 
+                p.y+=speed; 
+                if(currentLvl==='INF') {
+                    ctx.fillStyle="#ff0044"; ctx.font="20px Arial"; ctx.fillText("❤️", p.x-10, p.y+5);
+                } else {
+                    ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill();
+                }
+                if(Math.hypot(p.x-ballX,p.y-ballY)<35){ pieces.splice(i,1); coins++; sync(); } 
             });
 
-            if(score >= target) {
-                ballY -= 20;
-                if(ballY<-100) { state="WIN"; document.getElementById('screen-win').classList.add('active-screen'); if(currentLvl===reached)reached++; sync(); }
-            }
-            
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            // BALLE NÉON
-            ctx.shadowBlur = 20; ctx.shadowColor = ballColor;
-            ctx.fillStyle=ballColor; ctx.beginPath(); ctx.arc(ballX,ballY,22,0,Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
-            
+            ctx.shadowBlur = 20; ctx.shadowColor = ballColor; ctx.fillStyle=ballColor;
+            ctx.beginPath(); ctx.arc(ballX,ballY,22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
             ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,160);
         }
         requestAnimationFrame(loop);
