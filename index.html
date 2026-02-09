@@ -2,49 +2,63 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - ULTIMATE EDITION</title>
+    <title>CYBER DASH - VINTAGE NEON</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
-        body { background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- STRUCTURE PC --- */
-        #left-col, #right-col { width: 280px; border: 1px solid #ffffff22; background: #000; display: flex; flex-direction: column; z-index: 10; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a15 0%, #000 100%); }
+        /* --- FENETRES LATERALES REPAREES --- */
+        #left-col, #right-col { 
+            width: 280px; 
+            border: 2px solid #ffffff44; 
+            background: rgba(10, 10, 20, 0.9); 
+            margin: 10px;
+            border-radius: 15px;
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        /* --- ADMIN PANEL --- */
-        #admin-panel { padding: 15px; display: none; background: #200; border-bottom: 2px solid #ff3131; }
-        .admin-txt { color: #ff3131; font-family: monospace; font-size: 11px; margin-bottom: 10px; line-height: 1.4; }
-        .admin-btn { width: 100%; padding: 8px; background: #ff3131; color: #fff; border: none; font-weight: 900; cursor: pointer; margin-bottom: 5px; font-size: 10px; }
+        .panel-title { padding: 15px; background: rgba(255,255,255,0.05); color: #00f2ff; text-align: center; border-bottom: 1px solid #ffffff22; font-size: 14px; font-weight: 900; border-radius: 13px 13px 0 0; }
+        #leaderboard { flex-grow: 1; padding: 10px; font-size: 11px; overflow-y: auto; }
+        
+        /* --- ADMIN & SHOP --- */
+        #admin-panel { padding: 15px; display: none; background: rgba(255,0,0,0.1); border-bottom: 1px solid #ff3131; }
+        .admin-txt { color: #ff3131; font-size: 10px; margin-bottom: 10px; font-family: monospace; }
+        #shop-items { padding: 10px; }
+        .shop-item { background: #000; border: 1px solid #ffffff44; padding: 10px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; font-size: 10px; }
+        .shop-item.owned { border-color: #00f2ff; color: #00f2ff; }
 
-        /* --- SHOP --- */
-        #shop { flex-grow: 1; padding: 15px; overflow-y: auto; }
-        .shop-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff22; padding: 12px; margin-bottom: 10px; background: #050505; cursor: pointer; transition: 0.2s; }
-        .shop-item:hover { border-color: #fff; }
-        .shop-item.owned { border-color: #00f2ff; color: #00f2ff; box-shadow: 0 0 10px #00f2ff44; }
-
-        /* --- GAME CONTAINER --- */
-        #container { height: 95vh; aspect-ratio: 9/16; position: relative; border: 2px solid #ffffff44; background: #000; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,1); }
+        /* --- ZONE DE JEU --- */
+        #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; box-shadow: 0 0 30px #ffffff22; }
         canvas { width: 100%; height: 100%; }
 
-        /* --- BOUTONS BLANCS NEON --- */
-        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; color: #fff; font-size: 28px; box-shadow: 0 0 20px #fff; text-shadow: 0 0 10px #fff; }
-        #btn-L { left: 25px; } #btn-R { right: 25px; }
+        /* --- BOUTONS BLANCS S'INTENSIFIENT --- */
+        .m-btn { 
+            display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; 
+            background: rgba(255,255,255,0.1); border: 3px solid #fff; 
+            border-radius: 50%; z-index: 500; justify-content: center; align-items: center; 
+            font-weight: 900; color: #fff; font-size: 24px; box-shadow: 0 0 15px #ffffff66;
+            transition: all 0.1s;
+        }
+        .m-btn.active { background: #fff; color: #000; box-shadow: 0 0 40px #fff; transform: scale(1.1); }
+        #btn-L { left: 20px; } #btn-R { right: 20px; }
 
         /* --- SCREENS --- */
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.92); z-index: 100; padding: 20px; }
-        .active { display: flex !important; }
-        .btn-ui { border: 2px solid #fff; padding: 15px 40px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 25px; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; }
+        .active-screen { display: flex !important; }
+        .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; background: none; }
         .btn-ui:hover { background: #fff; color: #000; }
 
-        /* --- WIN ANIMATION (STARS) --- */
-        .star-box { margin: 25px 0; display: flex; gap: 15px; }
-        .star { font-size: 60px; color: #ffd700; text-shadow: 0 0 30px #ffd700; opacity: 0; transform: scale(0); }
-        .star.pop { animation: starPop 0.6s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes starPop { to { opacity: 1; transform: scale(1); } }
+        /* --- STARS --- */
+        .star-box { font-size: 50px; color: #ffd700; margin: 20px; }
+        .star { opacity: 0; display: inline-block; transform: scale(0.5); transition: 0.5s; }
+        .star.show { opacity: 1; transform: scale(1.2); text-shadow: 0 0 20px #ffd700; }
 
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
@@ -52,9 +66,9 @@
 <body>
 
     <div id="left-col">
-        <div style="padding:20px; text-align:center; font-weight:900; border-bottom:1px solid #222; letter-spacing:3px;">LEADERBOARD</div>
-        <div id="leaderboard" style="flex-grow:1; padding:15px; font-size:12px; color:#00f2ff;"></div>
-        <a href="https://www.paypal.me/frsaamya" target="_blank" style="margin:20px; padding:12px; border:1px solid #fff; color:#fff; text-decoration:none; text-align:center; font-size:11px;">SUPPORT PROJECT ☕</a>
+        <div class="panel-title">🏆 CLASSEMENT</div>
+        <div id="leaderboard"></div>
+        <a href="https://www.paypal.me/frsaamya" target="_blank" style="margin:15px; border:1px solid #fff; color:#fff; text-decoration:none; padding:10px; text-align:center; font-size:10px;">☕ DONATION</a>
     </div>
 
     <div id="game-col">
@@ -62,26 +76,24 @@
             <div id="btn-L" class="m-btn">L</div>
             <div id="btn-R" class="m-btn">R</div>
 
-            <div id="screen-login" class="screen active">
-                <h1 style="font-size:35px; text-shadow:0 0 20px #fff;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="NICKNAME..." maxlength="10" style="margin-top:30px; padding:15px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; width:80%; outline:none;">
-                <div class="btn-ui" onclick="init()">CONNECT</div>
+            <div id="screen-login" class="screen active-screen">
+                <h1 style="font-size:35px; text-shadow: 0 0 15px #fff;">CYBER DASH</h1>
+                <input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none;">
+                <div class="btn-ui" onclick="init()">ENTRER</div>
             </div>
 
             <div id="screen-hub" class="screen">
-                <div id="stats-top" style="color:#00f2ff; margin-bottom:20px; font-size:14px;"></div>
-                <div id="lvls-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
-                <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">INFINITE MODE</div>
+                <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px;"></div>
+                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,3fr); gap:10px;"></div>
+                <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">INFINI</div>
             </div>
 
-            <div id="screen-win" class="screen" style="background:rgba(255,255,255,0.1); backdrop-filter:blur(15px);">
-                <h1 style="font-size:28px; letter-spacing:5px;">LEVEL CLEAR</h1>
-                <div class="star-box" id="star-box">
-                    <span class="star">★</span>
-                    <span class="star">★</span>
-                    <span class="star">★</span>
+            <div id="screen-win" class="screen">
+                <h2>NIVEAU RÉUSSI</h2>
+                <div class="star-box">
+                    <span class="star" id="s1">★</span><span class="star" id="s2">★</span><span class="star" id="s3">★</span>
                 </div>
-                <div class="btn-ui" onclick="location.reload()">CONTINUE</div>
+                <div class="btn-ui" onclick="location.reload()">CONTINUER</div>
             </div>
 
             <canvas id="cvs"></canvas>
@@ -89,21 +101,20 @@
     </div>
 
     <div id="right-col">
-        <div onclick="goAdmin()" style="padding:15px; color:#ff3131; cursor:pointer; text-align:center; font-size:11px; border-bottom:1px solid #222;">🛰️ SYSTEM ADMIN</div>
+        <div class="panel-title" onclick="goAdmin()" style="color:#ff3131; cursor:pointer;">🛰️ ADMIN</div>
         <div id="admin-panel">
-            <div id="admin-data" class="admin-txt"></div>
-            <button class="admin-btn" onclick="addPoints(1000)">+1000 PTS</button>
-            <button class="admin-btn" onclick="unlockAll()">UNLOCK LEVELS</button>
+            <div id="admin-info" class="admin-txt"></div>
+            <button onclick="addPoints(1000)" style="width:100%; margin-bottom:5px;">+1000 PTS</button>
+            <button onclick="unlockAll()" style="width:100%;">TOUT DÉBLOQUER</button>
         </div>
         <div id="shop">
-            <div style="text-align:center; font-weight:900; margin-bottom:15px; font-size:12px;">UPGRADES</div>
+            <div class="panel-title" style="border:none;">BOUTIQUE</div>
             <div id="shop-items"></div>
-            <div id="wallet" style="text-align:center; margin-top:20px; color:#39ff14; font-weight:900;">0 PTS</div>
+            <div id="user-pts" style="text-align:center; padding:10px; color:#39ff14;">0 PTS</div>
         </div>
     </div>
 
 <script>
-    // --- CONFIGURATION FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -116,183 +127,109 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- VARIABLES GLOBALES ---
     const cvs = document.getElementById("cvs");
     const ctx = cvs.getContext("2d");
     cvs.width = 600; cvs.height = 1000;
 
-    let user = "", ip = "", points = 0, record = 0, reached = 1, admin = false;
-    let ballX = 300, ballY = 750, obs = [], keys = {}, state = "LOGIN", score = 0, currentLvl = 1;
-    let ballColor = "#fff", owned = ["#fff"];
+    let user = "", ip = "", points = 0, record = 0, reached = 1, admin = false, currentLvl = 1;
+    let ballX = 300, ballY = 750, obs = [], keys = {}, state = "LOGIN", score = 0;
+    let color = "#fff", owned = ["#fff"];
 
-    // --- FONCTIONS ADMIN ---
-    function goAdmin() {
-        if(prompt("ADMIN PASS:") === "2011") {
-            admin = true;
-            document.getElementById('admin-panel').style.display = 'block';
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('admin-data').innerHTML = `TIME: ${now.toLocaleTimeString()}<br>IP: ${ip.replace(/_/g,'.')}<br>LAT: 48.85 | LON: 2.35`;
-            }, 1000);
-        }
-    }
+    function goAdmin() { if(prompt("CODE:") === "2011") { admin = true; document.getElementById('admin-panel').style.display='block'; setInterval(()=> { document.getElementById('admin-info').innerHTML=`TIME: ${new Date().toLocaleTimeString()}<br>IP: ${ip}`; }, 1000); } }
     function addPoints(n) { points += n; sync(); }
     function unlockAll() { reached = 9; sync(); }
-    function sync() { db.ref('users/'+ip).update({points, record, reached, owned, color:ballColor, user}); }
+    function sync() { db.ref('users/'+ip).update({points, record, reached, owned, color, user}); }
 
-    // --- INITIALISATION ---
     function init() {
-        user = document.getElementById('nick').value.toUpperCase();
-        if(!user) return alert("ENTRE UN PSEUDO !");
-        
-        document.getElementById('screen-login').classList.remove('active');
-        document.getElementById('screen-hub').classList.add('active');
-
+        user = document.getElementById('nick').value.toUpperCase(); if(!user) return;
+        document.getElementById('screen-login').classList.remove('active-screen');
+        document.getElementById('screen-hub').classList.add('active-screen');
         fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
             ip = d.ip.replace(/\./g, '_');
-            db.ref('users/'+ip).on('value', s => {
-                const data = s.val() || {};
-                points = data.points || 0;
-                record = data.record || 0;
-                reached = data.reached || 1;
-                owned = data.owned || ["#fff"];
-                ballColor = data.color || "#fff";
-                
-                document.getElementById('stats-top').innerText = `POINTS: ${points} | BEST: ${record}`;
-                document.getElementById('wallet').innerText = points + " PTS";
+            db.ref('users/'+ip).on('value', s=>{
+                const v = s.val()||{}; points=v.points||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; color=v.color||"#fff";
+                document.getElementById('hub-stats').innerText = `POINTS: ${points} | BEST: ${record}`;
+                document.getElementById('user-pts').innerText = points + " PTS";
                 renderLvls(); renderShop();
             });
         });
-
-        db.ref('users').orderByChild('record').limitToLast(10).on('value', s => {
-            let h = ""; let list = [];
-            s.forEach(child => { list.push(child.val()); });
-            list.reverse().forEach((u, i) => {
-                h += `<div style="padding:8px; border-bottom:1px solid #111; display:flex; justify-content:space-between;">
-                        <span>${i+1}. ${u.user || '??'}</span><span>${u.record || 0}</span>
-                      </div>`;
-            });
+        db.ref('users').orderByChild('record').limitToLast(10).on('value', s=>{
+            let h = ""; s.forEach(x=>{ let p=x.val(); h=`<div style="padding:5px; border-bottom:1px solid #222;">${p.user}: ${p.record}</div>`+h; });
             document.getElementById('leaderboard').innerHTML = h;
         });
     }
 
     function renderLvls() {
-        let h = "";
-        for(let i=1; i<=9; i++) {
-            const isOk = i <= reached;
-            h += `<div onclick="if(${isOk}) start(${i})" style="border:2px solid ${isOk?'#fff':'#333'}; padding:15px; text-align:center; cursor:${isOk?'pointer':'default'}; color:${isOk?'#fff':'#333'}; font-weight:900;">${i}</div>`;
-        }
-        document.getElementById('lvls-grid').innerHTML = h;
+        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:10px; margin:0; opacity:${i<=reached?1:0.2}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
+        document.getElementById('lvls').innerHTML = h;
     }
 
     function renderShop() {
-        let h = "";
-        [{n:"NEON", c:"#00f2ff", p:500}, {n:"GOLD", c:"#ffc439", p:2000}, {n:"CHROME", c:"chrome", p:5000}].forEach(item => {
-            const isOwned = owned.includes(item.c);
-            h += `<div class="shop-item ${isOwned?'owned':''}" onclick="buy('${item.c}', ${item.p})">
-                    <span>${item.n}</span><span>${isOwned?'SELECT':item.p+'P'}</span>
-                  </div>`;
+        let h = ""; [{n:"CYAN", c:"#00f2ff", p:300}].forEach(i=>{
+            const has = owned.includes(i.c);
+            h += `<div class="shop-item ${has?'owned':''}" onclick="buy('${i.c}',${i.p})"><span>${i.n}</span><span>${has?'OK':i.p}</span></div>`;
         });
         document.getElementById('shop-items').innerHTML = h;
     }
 
-    function buy(c, p) {
-        if(owned.includes(c)) { ballColor = c; sync(); }
-        else if(points >= p) { points -= p; owned.push(c); ballColor = c; sync(); }
-    }
+    function buy(c,p) { if(owned.includes(c)) { color=c; sync(); } else if(points>=p) { points-=p; owned.push(c); color=c; sync(); } }
 
-    // --- GAME ENGINE ---
-    function start(lvl) {
-        currentLvl = lvl;
-        state = "PLAY";
-        score = 0;
-        obs = [];
-        ballX = 300;
-        ballY = 750;
-        document.getElementById('screen-hub').classList.remove('active');
-    }
+    function start(l) { currentLvl = l; state="PLAY"; score=0; obs=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
 
-    window.onkeydown = e => { if(e.key==="ArrowLeft"||e.key==="q") keys["L"]=true; if(e.key==="ArrowRight"||e.key==="d") keys["R"]=true; };
-    window.onkeyup = e => { if(e.key==="ArrowLeft"||e.key==="q") keys["L"]=false; if(e.key==="ArrowRight"||e.key==="d") keys["R"]=false; };
-    
-    document.getElementById('btn-L').ontouchstart = e => { e.preventDefault(); keys["L"]=true; };
-    document.getElementById('btn-L').ontouchend = () => { keys["L"]=false; };
-    document.getElementById('btn-R').ontouchstart = e => { e.preventDefault(); keys["R"]=true; };
-    document.getElementById('btn-R').ontouchend = () => { keys["R"]=false; };
+    // --- CONTROLES AVEC EFFET INTENSE ---
+    function press(dir, act) { 
+        keys[dir] = act; 
+        const btn = document.getElementById('btn-'+dir);
+        if(act) btn.classList.add('active'); else btn.classList.remove('active');
+    }
+    window.onkeydown = e => { if(e.key==="ArrowLeft") press("L", true); if(e.key==="ArrowRight") press("R", true); };
+    window.onkeyup = e => { if(e.key==="ArrowLeft") press("L", false); if(e.key==="ArrowRight") press("R", false); };
+    document.getElementById('btn-L').ontouchstart = e => { e.preventDefault(); press("L", true); };
+    document.getElementById('btn-L').ontouchend = () => press("L", false);
+    document.getElementById('btn-R').ontouchstart = e => { e.preventDefault(); press("R", true); };
+    document.getElementById('btn-R').ontouchend = () => press("R", false);
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
-
         if(state === "PLAY") {
-            // Déplacement
-            if(keys["L"]) ballX -= 13; if(keys["R"]) ballX += 13;
-            ballX = Math.max(35, Math.min(565, ballX));
+            if(keys["L"]) ballX -= 12; if(keys["R"]) ballX += 12;
+            ballX = Math.max(30, Math.min(570, ballX));
 
-            // Logic des obstacles (Stop si victoire en cours)
-            const targetScore = 15;
-            const isFinishing = (currentLvl !== 'INF' && score >= targetScore);
-
-            if(!isFinishing) {
-                if(Math.random() < 0.04) obs.push({g: Math.random()*250+175, y: -50, p: false});
-            }
-
-            obs.forEach((o, idx) => {
-                o.y += (currentLvl === 'INF') ? 8 + (score/25) : 7 + (currentLvl*0.4);
-                
-                // Dessin Murs Néon
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 4;
-                ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
-                ctx.strokeRect(-10, o.y, o.g-130, 25);
-                ctx.strokeRect(o.g+130, o.y, 620, 25);
-                ctx.shadowBlur = 0;
-
-                // Collision
-                if(o.y > ballY-25 && o.y < ballY+25 && (ballX < o.g-115 || ballX > o.g+115)) {
-                    state = "HUB"; 
-                    document.getElementById('screen-hub').classList.add('active');
-                    if(score > record) record = score;
-                    points += score;
-                    sync();
+            // DIFFICULTÉ RÉPARÉE : Passage large (140px)
+            const isFinishing = (currentLvl !== 'INF' && score >= 15);
+            if(!isFinishing && Math.random() < 0.04) obs.push({g: Math.random()*240+180, y: -50, p: false});
+            
+            obs.forEach(o => {
+                o.y += (currentLvl === 'INF') ? 8 : 6.5 + (currentLvl*0.4); // Plus lent au début !
+                ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+                ctx.strokeRect(-10, o.y, o.g-140, 20); ctx.strokeRect(o.g+140, o.y, 610, 20);
+                if(o.y > ballY-20 && o.y < ballY+20 && (ballX < o.g-120 || ballX > o.g+120)) {
+                    state = "HUB"; document.getElementById('screen-hub').classList.add('active-screen');
+                    points += score; record = Math.max(record, score); sync();
                 }
-                // Score
                 if(o.y > ballY && !o.p) { o.p = true; score++; }
             });
 
-            // --- CINEMATIQUE DE FIN ---
+            // CINEMATIQUE FIN
             if(isFinishing) {
-                ballY -= 6; // La balle monte vers le ciel
-                
-                // Lumière de fin
-                let g = ctx.createRadialGradient(300, 0, 0, 300, 0, 500);
+                ballY -= 6;
+                let g = ctx.createRadialGradient(300, 0, 0, 300, 0, 600);
                 g.addColorStop(0, "white"); g.addColorStop(1, "transparent");
                 ctx.fillStyle = g; ctx.fillRect(0,0,600,1000);
-
-                if(ballY < -50) {
-                    state = "WIN";
-                    document.getElementById('screen-win').classList.add('active');
-                    if(currentLvl === reached) reached++;
-                    points += 200;
-                    sync();
-                    
-                    // Animation étoiles
-                    const stars = document.querySelectorAll('.star');
-                    stars.forEach((s, i) => {
-                        setTimeout(() => s.classList.add('pop'), i * 300);
-                    });
+                if(ballY < 0) {
+                    state = "WIN"; document.getElementById('screen-win').classList.add('active-screen');
+                    setTimeout(()=>document.getElementById('s1').classList.add('show'), 300);
+                    setTimeout(()=>document.getElementById('s2').classList.add('show'), 600);
+                    setTimeout(()=>document.getElementById('s3').classList.add('show'), 900);
+                    if(currentLvl === reached) reached++; points += 100; sync();
                 }
             }
 
-            // Dessin Balle
-            ctx.fillStyle = (ballColor === "chrome") ? "#fff" : ballColor;
-            ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle;
-            ctx.beginPath(); ctx.arc(ballX, ballY, 24, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // HUD Score
-            ctx.fillStyle = "#fff"; ctx.font = "900 70px Orbitron"; ctx.textAlign = "center";
+            ctx.fillStyle = color; ctx.shadowBlur = 20; ctx.shadowColor = color;
+            ctx.beginPath(); ctx.arc(ballX, ballY, 22, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "900 80px Orbitron"; ctx.textAlign = "center";
             ctx.fillText(score, 300, 150);
         }
-
         requestAnimationFrame(loop);
     }
     loop();
