@@ -2,50 +2,60 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - FINAL EDITION</title>
+    <title>CYBER DASH - ULTIMATE SAGA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: none; }
-        body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #app-container { width: 100%; max-width: 500px; height: 95vh; position: relative; border: 3px solid #00f2ff; background: #000; overflow: hidden; box-shadow: 0 0 20px rgba(0,242,255,0.2); transition: border-color 0.5s; }
-        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; z-index: 5; }
+        body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
+        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        #app-container { width: 100%; height: 95vh; aspect-ratio: 9/16; position: relative; border: 3px solid #00f2ff; background: #000; overflow: hidden; }
+        .page { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 5; background: rgba(0,0,0,0.9); }
         .active { display: flex; }
-        input { background: rgba(255,255,255,0.05); border: 2px solid #00f2ff; color: #fff; padding: 15px; font-family: 'Orbitron'; font-size: 18px; text-align: center; width: 90%; outline: none; margin-bottom: 20px; text-transform: uppercase; }
-        .btn { border: 2px solid #00f2ff; padding: 18px 30px; cursor: pointer; text-transform: uppercase; font-weight: 900; background: rgba(0, 242, 255, 0.05); color: #00f2ff; width: 90%; margin: 10px 0; transition: 0.2s; letter-spacing: 2px; }
-        .btn:active { transform: scale(0.95); background: #00f2ff; color: #000; }
-        #info-bar { position: absolute; top: 15px; left: 15px; font-size: 10px; color: #00f2ff; z-index: 10; text-align: left; line-height: 1.4; pointer-events: none; }
-        canvas { width: 100%; height: 100%; display: block; }
+        input { background: rgba(255,255,255,0.05); border: 2px solid #00f2ff; color: #fff; padding: 15px; font-family: 'Orbitron'; font-size: 18px; text-align: center; width: 90%; outline: none; margin-bottom: 20px; }
+        .btn { border: 2px solid #00f2ff; padding: 15px; cursor: pointer; text-transform: uppercase; font-weight: 900; background: rgba(0, 242, 255, 0.1); color: #00f2ff; width: 90%; margin: 5px 0; }
+        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
+        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
+        .rank-card { display: flex; justify-content: space-between; padding: 10px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #00f2ff; font-size: 11px; }
+        .log-card { padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 10px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
+        #paypal-btn { position: absolute; bottom: 20px; background: #ffc439; color: #003087; padding: 10px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; font-size: 12px; }
+        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div id="app-container">
-    <div id="info-bar">IDENT: <span id="user-ip">...</span><br>PROGRESSION: NIV.<span id="user-reach">1</span></div>
-
-    <div id="page-login" class="page active">
-        <h1 style="color:#00f2ff; font-size: 35px; margin-bottom: 10px; font-weight: 900;">CYBER DASH</h1>
-        <p style="font-size: 12px; letter-spacing: 2px; margin-bottom: 30px; opacity: 0.7;">AUTH_REQUIRED</p>
-        <input type="text" id="pseudoInput" placeholder="PSEUDO_PILOTE" maxlength="10">
-        <div class="btn" onclick="validateLogin()">INITIALISER</div>
+    <div id="left-col">
+        <div class="panel-header">🏆 TOP 15 WORLD</div>
+        <div id="leaderboard" class="scroll-list"></div>
     </div>
 
-    <div id="page-hub" class="page">
-        <h2 id="welcome-msg" style="font-size: 20px; color: #fff; margin-bottom: 40px;">READY?</h2>
-        <div class="btn" onclick="startMode('SAGA')">AVENTURE : NIV.<span id="btn-next-lvl">1</span></div>
-        <div class="btn" onclick="startMode('INFINITE')" style="border-color:#ff00ff; color:#ff00ff;">MODE INFINI</div>
-        <p style="font-size: 10px; margin-top: 40px; opacity: 0.5;">CLIQUEZ À GAUCHE OU À DROITE POUR DIRIGER</p>
+    <div id="game-col">
+        <div id="app-container">
+            <div id="page-login" class="page active">
+                <h1 style="color:#00f2ff">CYBER DASH</h1>
+                <input type="text" id="pseudoInput" placeholder="PSEUDO..." maxlength="10">
+                <div class="btn" onclick="validateLogin()">ENTRER</div>
+                <a id="paypal-btn" href="https://paypal.me/votrelien" target="_blank">Soutenir le projet 💳</a>
+            </div>
+            <div id="page-hub" class="page">
+                <h2 id="welcome-msg" style="color:white">HUB</h2>
+                <div class="btn" onclick="startMode('SAGA')">AVENTURE NIV.<span id="btn-next-lvl">1</span></div>
+                <div class="btn" onclick="startMode('INFINITE')" style="border-color:#ff00ff; color:#ff00ff;">INFINI</div>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
     </div>
 
-    <div id="page-game" class="page" style="padding:0;">
-        <canvas id="gameCanvas"></canvas>
+    <div id="right-col">
+        <div class="panel-header">🛰️ LIVE TRACKING</div>
+        <div id="logs" class="scroll-list"></div>
     </div>
-</div>
 
 <script>
-    // CONFIGURATION FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
         authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -62,102 +72,98 @@
     const ctx = canvas.getContext("2d");
     canvas.width = 600; canvas.height = 1000;
 
-    let pseudo = "", reachedLevel = 1, userIP = "", state = "LOGIN", score = 0;
-    let ballX = 300, obstacles = [], items = [], keys = {}, themeColor = "#00f2ff";
+    let pseudo = "", reachedLevel = 1, userIP = "", state = "LOGIN", score = 0, ballX = 300;
+    let obstacles = [], items = [], stars = [], keys = {}, themeColor = "#00f2ff";
+    let lastObstacleY = -200; // Pour forcer l'espace vertical
 
-    // DETECTION IP ET SYNC NIVEAU
+    for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+
+    // LEADERBOARD & LOGS SYNC
+    db.ref('bestScores').on('value', snap => {
+        let entries = []; snap.forEach(c => entries.push(c.val()));
+        entries.sort((a,b) => b.score - a.score);
+        document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `
+            <div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span>${s.score}</span></div>`).join('');
+    });
+
+    db.ref('logs').limitToLast(15).on('value', snap => {
+        let h = ""; snap.forEach(c => {
+            const l = c.val(); let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
+            h = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}</div>` + h;
+        });
+        document.getElementById('logs').innerHTML = h;
+    });
+
     fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
         userIP = d.ip.replace(/\./g, '_');
-        document.getElementById('user-ip').innerText = d.ip;
         db.ref('users/' + userIP).on('value', snap => {
-            if(snap.exists()) {
+            if(snap.exists()){
                 reachedLevel = snap.val().reached || 1;
-                document.getElementById('user-reach').innerText = reachedLevel;
                 document.getElementById('btn-next-lvl').innerText = reachedLevel;
-                applyTheme(reachedLevel);
             }
         });
     });
 
-    function applyTheme(lvl) {
-        if(lvl <= 5) themeColor = "#00f2ff";
-        else if(lvl <= 10) themeColor = "#39ff14";
-        else if(lvl <= 15) themeColor = "#bc13fe";
-        else themeColor = "#ff3131";
-        document.getElementById('app-container').style.borderColor = themeColor;
-        document.getElementById('info-bar').style.color = themeColor;
-    }
-
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+        if(id) document.getElementById(id).classList.add('active');
     }
 
     function validateLogin() {
-        let val = document.getElementById('pseudoInput').value;
-        if(val.length >= 3) {
-            pseudo = val.toUpperCase();
-            document.getElementById('welcome-msg').innerText = "PILOTE : " + pseudo;
-            showPage('page-hub');
-            state = "HUB";
-        } else { alert("NOM REQUIS (3 CARACTÈRES MIN.)"); }
+        let v = document.getElementById('pseudoInput').value;
+        if(v.length >= 2) { pseudo = v.toUpperCase(); showPage('page-hub'); }
     }
 
-    function startMode(mode) {
-        state = mode; score = 0; obstacles = []; items = []; ballX = 300;
-        showPage('page-game');
+    function startMode(m) {
+        state = m; score = 0; obstacles = []; items = []; ballX = 300; lastObstacleY = -200;
+        showPage(null);
+        db.ref('logs').push({user: pseudo, action: "DÉPART " + m});
     }
 
-    // CONTROLES PC & TACTILE
     window.addEventListener("keydown", e => keys[e.code] = true);
     window.addEventListener("keyup", e => keys[e.code] = false);
 
-    canvas.addEventListener("touchstart", e => {
-        const tx = e.touches[0].clientX;
-        if(tx < window.innerWidth/2) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true;
-    }, {passive: false});
-    canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
-
     function gameLoop() {
+        ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
+        stars.forEach(s => { 
+            s.y += 1.5; if(s.y > 1000) s.y = 0;
+            ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillRect(s.x, s.y, s.s, s.s);
+        });
+
         if(state === "SAGA" || state === "INFINITE") {
-            ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-            
-            // Mouvement
-            if(keys["ArrowLeft"] || keys["KeyA"] || keys["KeyQ"]) ballX -= 14;
-            if(keys["ArrowRight"] || keys["KeyD"]) ballX += 14;
+            // SENSIBILITÉ RÉDUITE (10 au lieu de 14)
+            if(keys["ArrowLeft"] || keys["KeyA"] || keys["KeyQ"]) ballX -= 10;
+            if(keys["ArrowRight"] || keys["KeyD"]) ballX += 10;
             ballX = Math.max(40, Math.min(560, ballX));
 
-            let speed = 7 + (reachedLevel * 0.45);
+            let speed = 6 + (reachedLevel * 0.4);
 
-            // Obstacles (Passage de 180px pour la fidélité)
-            if(Math.random() < 0.045) {
-                obstacles.push({gap: Math.random()*360+120, y: -50, hit: false});
+            // GÉNÉRATION AVEC ESPACE VERTICAL (Min 250px entre les obstacles)
+            if(Math.random() < 0.05 && lastObstacleY > 250) {
+                obstacles.push({gap: Math.random()*340+130, y: -50, hit: false});
+                lastObstacleY = 0;
             }
+            lastObstacleY += speed;
 
-            // Bonus +5
-            if(Math.random() < 0.01) {
-                items.push({x: Math.random()*500+50, y: -50, collected: false});
-            }
+            if(Math.random() < 0.01) items.push({x: Math.random()*500+50, y: -50});
 
-            // Draw Items
             items.forEach((it, i) => {
                 it.y += speed;
-                ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = themeColor;
-                ctx.beginPath();
-                ctx.moveTo(it.x, it.y-15); ctx.lineTo(it.x+15, it.y);
-                ctx.lineTo(it.x, it.y+15); ctx.lineTo(it.x-15, it.y);
-                ctx.fill();
-                if(Math.hypot(ballX - it.x, 900 - it.y) < 45) { it.collected = true; score += 5; items.splice(i,1); }
+                ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+                ctx.beginPath(); ctx.arc(it.x, it.y, 10, 0, Math.PI*2); ctx.fill();
+                if(Math.hypot(ballX - it.x, 900 - it.y) < 40) { score += 5; items.splice(i,1); }
             });
 
-            // Draw Obstacles
             obstacles.forEach(o => {
                 o.y += speed;
-                ctx.fillStyle = themeColor; ctx.shadowBlur = 15; ctx.shadowColor = themeColor;
-                ctx.fillRect(0, o.y, o.gap-90, 35);
-                ctx.fillRect(o.gap+90, o.y, 600, 35);
+                ctx.fillStyle = (reachedLevel > 5) ? "#39ff14" : "#00f2ff";
+                ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+                ctx.fillRect(0, o.y, o.gap-100, 35); // Passage de 200px (LAAAARGE)
+                ctx.fillRect(o.gap+100, o.y, 600, 35);
 
-                if(o.y > 880 && o.y < 915 && (ballX < o.gap-75 || ballX > o.gap+75)) {
+                if(o.y > 880 && o.y < 920 && (ballX < o.gap-85 || ballX > o.gap+85)) {
+                    db.ref('logs').push({user: pseudo, action: "CRASH ("+score+")"});
+                    if(state === "INFINITE") db.ref('bestScores/'+userIP).set({name: pseudo, score: score});
                     state = "HUB"; showPage('page-hub');
                 }
                 if(o.y > 1000 && !o.hit) {
@@ -170,17 +176,9 @@
                 }
             });
 
-            obstacles = obstacles.filter(o => o.y < 1100);
-            items = items.filter(it => it.y < 1100);
-
-            // Balle
             ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
             ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-            
-            // Score UI
-            ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.font = "900 50px Orbitron";
-            ctx.fillStyle = themeColor; ctx.fillText(score, 40, 90);
-            ctx.font = "12px Orbitron"; ctx.fillText("OBJECTIF: " + (reachedLevel*100), 40, 120);
+            ctx.shadowBlur = 0; ctx.font = "900 60px Orbitron"; ctx.fillText(score, 40, 90);
         }
         requestAnimationFrame(gameLoop);
     }
