@@ -11,18 +11,43 @@
     <style>
         * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* COLONNES */
         #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
         #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        
         canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; background: #000; z-index: 1; }
+        
+        /* UI COMPONENTS */
         .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00f2ff44; }
+        #admin-trigger { cursor: crosshair; }
+        
         .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
-        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; animation: fadeIn 0.5s ease; }
+        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; }
         .rank-card b { color: #00f2ff; }
-        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
+        
+        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); animation: fadeIn 0.3s ease; }
+        
+        /* BOUTON PAYPAL */
+        .btn-paypal {
+            margin: 15px; padding: 12px;
+            background: linear-gradient(135deg, #ffc439 0%, #ff9600 100%);
+            color: #003087; text-align: center; border-radius: 8px;
+            font-weight: 900; text-decoration: none; font-size: 12px;
+            display: block; transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-paypal:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 196, 57, 0.4); }
+
         #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } #game-col { width: 100vw; height: 100vh; } canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) { 
+            #left-col, #right-col { display: none !important; } 
+            #game-col { width: 100vw; height: 100vh; } 
+            canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; margin: 0; } 
+        }
     </style>
 </head>
 <body>
@@ -32,6 +57,7 @@
     <div id="left-col">
         <div class="panel-header">🏆 Top 15 World</div>
         <div id="leaderboard" class="scroll-list"></div>
+        <a href="https://paypal.me/frsaamya" target="_blank" class="btn-paypal">☕ Offre-moi un café</a>
     </div>
 
     <div id="game-col">
@@ -39,11 +65,12 @@
     </div>
 
     <div id="right-col">
-        <div class="panel-header">🛰️ Live Tracking</div>
+        <div class="panel-header" id="admin-trigger" onclick="adminClear()">🛰️ Live Tracking</div>
         <div id="logs" class="scroll-list"></div>
     </div>
 
     <script>
+        // CONFIG FIREBASE
         const firebaseConfig = {
           apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
           authDomain: "cyberdash-2baf5.firebaseapp.com",
@@ -56,42 +83,55 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- GESTION IP ---
-        let userIP = "unknown";
-        fetch('https://api.ipify.org?format=json')
-            .then(res => res.json())
-            .then(data => { userIP = data.ip.replace(/\./g, '_'); });
-
+        // VARIABLES GLOBALES
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
         const mInput = document.getElementById('mobileInput');
-        let net = { ip: "...", loc: "Detecting..." };
+        canvas.width = 600; canvas.height = 1000;
+
+        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300;
+        let obstacles = [], stars = [], keys = {};
+        let userIP = "unknown", lastKnownPseudo = "", netData = { ip: "...", loc: "Detecting..." };
+
+        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+
+        // RÉCUPÉRATION INFOS RÉSEAU & HISTORIQUE
         fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            net.ip = d.ip; net.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
+            netData.ip = d.ip; 
+            netData.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
+            userIP = d.ip.replace(/\./g, '_');
+            
+            db.ref('userHistory/' + userIP).once('value').then(snap => {
+                if(snap.exists()) lastKnownPseudo = snap.val().lastPseudo;
+            });
         });
 
+        // ADMIN : EFFACER LES LOGS (Code: 1234)
+        function adminClear() {
+            if(prompt("CODE ADMIN :") === "1234") {
+                if(confirm("Vider les logs ?")) db.ref('logs').remove();
+            }
+        }
+
+        // LOGS & CLASSEMENT
         function pushLog(u, a) {
-            db.ref('logs').push({ user: u, action: a, loc: net.loc, time: new Date().toLocaleTimeString() });
+            let displayPseudo = (lastKnownPseudo && lastKnownPseudo !== u) ? `${u} (ex: ${lastKnownPseudo})` : u;
+            db.ref('userHistory/' + userIP).set({ lastPseudo: u });
+            lastKnownPseudo = u;
+
+            db.ref('logs').push({ 
+                user: displayPseudo, action: a, loc: netData.loc, 
+                ip: netData.ip, time: new Date().toLocaleTimeString('fr-FR') 
+            });
         }
 
         db.ref('bestScores').on('value', snap => {
             let entries = [];
-            snap.forEach(c => {
-                let d = c.val();
-                if(d.name && d.score !== undefined) entries.push(d);
-            });
+            snap.forEach(c => { if(c.val().name) entries.push(c.val()); });
             entries.sort((a,b) => b.score - a.score);
-            let top15 = entries.slice(0, 15);
-            
-            const list = document.getElementById('leaderboard');
-            if(top15.length === 0) {
-                list.innerHTML = "<div style='text-align:center;font-size:10px;color:#666'>En attente de pilotes...</div>";
-            } else {
-                list.innerHTML = top15.map((s,i) => `
-                    <div class="rank-card">
-                        <span><b>#${i+1}</b> ${s.name}</span>
-                        <span style="color:#00f2ff">${s.score}</span>
-                    </div>
-                `).join('');
-            }
+            document.getElementById('leaderboard').innerHTML = entries.slice(0, 15).map((s,i) => `
+                <div class="rank-card"><span><b>#${i+1}</b> ${s.name}</span><span style="color:#00f2ff">${s.score}</span></div>
+            `).join('') || "<div style='text-align:center;font-size:10px;color:#666'>En attente...</div>";
         });
 
         db.ref('logs').limitToLast(15).on('value', snap => {
@@ -99,25 +139,19 @@
             snap.forEach(c => {
                 const l = c.val();
                 let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
-                html = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}<br><span style="color:#00f2ff">📍 ${l.loc}</span></div>` + html;
+                html = `<div class="log-card" style="border-left-color:${col}">
+                    <b style="color:${col}">${l.user}</b>: ${l.action}<br>
+                    <span style="color:#888; font-size:9px;">🕒 ${l.time} | 🌐 ${l.ip}</span><br>
+                    <span style="color:#00f2ff; font-size:9px;">📍 ${l.loc}</span>
+                </div>` + html;
             });
             document.getElementById('logs').innerHTML = html;
         });
 
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = 600; canvas.height = 1000;
-
-        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], stars = [], keys = {};
-        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
-
+        // INPUTS
         mInput.addEventListener('input', (e) => { if(state === "MENU") pseudo = e.target.value.toUpperCase(); });
-
         window.addEventListener("keydown", e => {
-            if(state === "MENU") {
-                if(e.key === "Enter" && pseudo.length >= 3) startGame();
-                else mInput.focus();
-            }
+            if(state === "MENU" && e.key === "Enter" && pseudo.length >= 3) startGame();
             if(state === "GAMEOVER" && e.key === " ") resetToMenu();
             keys[e.key] = true;
         });
@@ -127,27 +161,21 @@
             e.preventDefault();
             const r = canvas.getBoundingClientRect();
             const tx = (e.touches[0].clientX - r.left) / r.width * 600;
-            if(state === "MENU") {
-                mInput.focus();
-                if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); 
-            }
+            if(state === "MENU") { mInput.focus(); if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); }
             else if(state === "GAMEOVER") resetToMenu();
             else { if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
         }, {passive: false});
-
         canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
 
+        // LOGIQUE JEU
         function startGame() { state = "PLAYING"; mInput.blur(); pushLog(pseudo, "DÉCOLLAGE"); }
         function resetToMenu() { state = "MENU"; score = 0; level = 1; obstacles = []; ballX = 300; pseudo = ""; mInput.value = ""; }
 
         function saveScore(p, s) {
-            if(s < 1 || !p) return;
-            // --- MODIFICATION ICI : TRI PAR IP ---
+            if(s < 1 || !p || userIP === "unknown") return;
             const ref = db.ref('bestScores/' + userIP);
             ref.once('value').then(snap => {
-                if(!snap.exists() || snap.val().score < s) {
-                    ref.set({ name: p, score: s });
-                }
+                if(!snap.exists() || snap.val().score < s) ref.set({ name: p, score: s });
             });
         }
 
@@ -158,6 +186,7 @@
             if(keys["ArrowLeft"]) ballX -= 12;
             if(keys["ArrowRight"]) ballX += 12;
             ballX = Math.max(30, Math.min(570, ballX));
+            
             if(Math.random() < 0.05) {
                 let w = Math.max(165, 430 - (level * 15));
                 obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
@@ -183,13 +212,10 @@
                 ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
                 ctx.fillText("CYBER DASH", 300, 350);
                 ctx.fillStyle = "#fff"; ctx.font = "16px Orbitron";
-                ctx.fillText("TAPOTE ICI POUR TON PSEUDO :", 300, 450);
+                ctx.fillText("PSEUDO (3 MIN) :", 300, 450);
                 ctx.fillStyle = "#00f2ff"; ctx.font = "bold 45px Orbitron";
                 ctx.fillText(pseudo || "____", 300, 520);
-                if(pseudo.length >= 3) {
-                    ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron";
-                    ctx.fillText("CLIQUE ICI POUR JOUER", 300, 600);
-                }
+                if(pseudo.length >= 3) { ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron"; ctx.fillText("CLIQUE POUR JOUER", 300, 600); }
             } else if(state === "PLAYING") {
                 ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
                 obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 35); ctx.fillRect(o.x+o.w, o.y, 600, 35); });
