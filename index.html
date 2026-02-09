@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - DONATION EDITION</title>
+    <title>CYBER DASH - PRECISION EDITION</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -14,32 +14,29 @@
         #left-col, #right-col { width: 320px; border: 1px solid #ffffff22; background: rgba(5,5,15,0.98); margin: 10px; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         
-        .panel-title { padding: 20px; text-align: center; font-weight: 900; border-bottom: 2px solid #ffffff11; color: #00f2ff; letter-spacing: 2px; }
+        .panel-title { padding: 20px; text-align: center; font-weight: 900; border-bottom: 2px solid #ffffff11; color: #00f2ff; letter-spacing: 2px; cursor: pointer; user-select: none; }
         #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 4px solid #fff; background: #000; overflow: hidden; border-radius: 5px; }
         canvas { width: 100%; height: 100%; }
 
-        /* SCROLL ZONES */
+        /* SCROLL & ITEMS */
         .scroll-zone { flex-grow: 1; overflow-y: auto; padding: 15px; }
-        
-        /* ITEM CARDS */
         .item-card { background: rgba(255,255,255,0.05); margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ffffff11; }
-        .item-name { font-weight: 900; font-size: 11px; }
         .buy-btn { background: #00f2ff; color: #000; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 10px; }
         .buy-btn.equipped { background: #fff; }
 
-        /* PAYPAL BOXES */
-        .paypal-donation { background: #003087; color: #fff; padding: 15px; text-align: center; font-size: 11px; cursor: pointer; font-weight: 900; border-top: 1px solid #ffffff22; }
-        .paypal-pack { background: #ffc439; color: #003087; padding: 15px; text-align: center; font-size: 12px; cursor: pointer; font-weight: 900; border-top: 1px solid #ffffff22; }
+        /* PAYPAL & ADMIN */
+        #admin-panel { display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #ff0044; padding: 10px; border-radius: 10px; z-index: 2000; gap: 10px; box-shadow: 0 0 15px #ff0044; }
+        .paypal-donation { background: #003087; color: #fff; padding: 15px; text-align: center; font-size: 11px; cursor: pointer; font-weight: 900; }
+        .paypal-pack { background: #ffc439; color: #003087; padding: 15px; text-align: center; font-size: 12px; cursor: pointer; font-weight: 900; }
 
-        /* SCREENS */
+        /* UI SCREENS */
         .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; padding: 20px; }
         .active-screen { display: flex !important; }
         .btn-ui { border: 2px solid #fff; padding: 15px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; width: 85%; }
-        
         .btn-infini-event { position: relative; background: linear-gradient(135deg, #ff007f, #99004d); border: none; color: white; padding: 20px; font-weight: 900; margin-top: 25px; width: 85%; cursor: pointer; border-radius: 15px; }
         
-        #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; font-size:24px; background: rgba(255,255,255,0.03); }
-        .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
+        #user-coins { text-align:center; color:#ffd700; font-weight:900; padding:15px; font-size:24px; }
+        .m-btn { display: none; position: absolute; bottom: 40px; width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
 
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
@@ -50,39 +47,39 @@
     <div id="left-col">
         <div class="panel-title">CLASSEMENT</div>
         <div id="leaderboard" class="scroll-zone"></div>
-        <div class="paypal-donation" onclick="window.open('https://paypal.me/frsaamya')">
-            Soutenir le projet ❤️ (Donation)
-        </div>
+        <div class="paypal-donation" onclick="window.open('https://paypal.me/frsaamya')">SOUTENIR LE PROJET ❤️</div>
     </div>
 
     <div id="game-col">
+        <div id="admin-panel">
+            <button onclick="coins+=10000;sync()" class="buy-btn">CASH +10k</button>
+            <button onclick="reached=9;sync()" class="buy-btn">UNLOCK ALL</button>
+        </div>
         <div id="container">
             <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
             
             <div id="screen-login" class="screen active-screen">
-                <h1 style="font-size: 40px; color: #00f2ff;">CYBER DASH</h1>
+                <h1 style="font-size: 35px; color: #00f2ff;">CYBER DASH</h1>
                 <input type="text" id="nick" placeholder="PSEUDO..." maxlength="10" style="margin:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron';">
-                <div class="btn-ui" onclick="init()">START</div>
+                <div class="btn-ui" onclick="init()">START MISSION</div>
             </div>
 
             <div id="screen-hub" class="screen">
                 <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size: 12px;"></div>
                 <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
-                <button class="btn-infini-event" onclick="start('INF')">MODE INFINI<br><span style="font-size:9px; opacity:0.8;">JUSQU'AU 14/02 ❤️</span></button>
+                <button class="btn-infini-event" onclick="start('INF')">MODE INFINI<br><span style="font-size:9px;">EVENT 14/02 ❤️</span></button>
             </div>
 
-            <div id="screen-win" class="screen"><h2 style="color:#ffd700">MISSION RÉUSSIE</h2><div id="stars-display" style="font-size:40px; margin:20px;"></div><div class="btn-ui" onclick="closeWin()">HUB</div></div>
+            <div id="screen-win" class="screen"><h2 style="color:#ffd700">RÉUSSI !</h2><div id="stars-display" style="font-size:40px; margin:20px;"></div><div class="btn-ui" onclick="closeWin()">HUB</div></div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
 
     <div id="right-col">
-        <div class="panel-title">BOUTIQUE</div>
+        <div class="panel-title" ondblclick="toggleAdmin()">BOUTIQUE</div>
         <div id="shop" class="scroll-zone"></div>
         <div id="user-coins">0 🪙</div>
-        <div class="paypal-pack" onclick="window.open('https://paypal.me/frsaamya/2.99')">
-            ⚡ PACK ELITE : 10.000 🪙 (2.99€)
-        </div>
+        <div class="paypal-pack" onclick="window.open('https://paypal.me/frsaamya/2.99')">PACK 10.000 🪙 (2.99€)</div>
     </div>
 
 <script>
@@ -91,12 +88,13 @@
     const db = firebase.database();
     const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
     
-    let user="", ip="", coins=0, record=0, reached=1, ballX=300, ballY=750, obs=[], pieces=[], stars=[], keys={}, state="LOGIN", score=0, ballTilt=0, trailPoints=[];
+    let user="", ip="", coins=0, record=0, reached=1, ballX=300, ballY=750, ballVX=0, obs=[], pieces=[], stars=[], keys={}, state="LOGIN", score=0, ballTilt=0, trailPoints=[];
     let ballColor="#fff", currentTrail="none", owned=["#fff", "none"];
 
     for(let i=0; i<80; i++) stars.push({x:Math.random()*600, y:Math.random()*1000, s:Math.random()*2, c:"#fff"});
 
     function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, currentTrail, user}); }
+    function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display==='flex'?'none':'flex'; }
     
     function init() {
         user = document.getElementById('nick').value.toUpperCase() || "PLAYER";
@@ -123,46 +121,29 @@
         {id:"BURGER", n:"BURGER 🍔", p:1000, t:"skin"}, {id:"SUN", n:"SOLEIL ☀️", p:1200, t:"skin"}, {id:"STAR", n:"ETOILE ⭐", p:1500, t:"skin"},
         {id:"GALAXY", n:"GALAXIE 🌌", p:2500, t:"skin"}, {id:"FIRE", n:"FEU 🔥", p:3000, t:"skin"}, {id:"GOLD", n:"OR PUR 👑", p:5000, t:"skin"},
         {id:"none", n:"SANS TRAINEE", p:0, t:"trail"}, {id:"rainbow", n:"ARC-EN-CIEL 🌈", p:1000, t:"trail"},
-        {id:"elec", n:"ELECTRIQUE ⚡", p:2000, t:"trail"}, {id:"space", n:"GALACTIQUE ✨", p:2500, t:"trail"},
-        {id:"fire_t", n:"FLAMMES 🔥", p:3500, t:"trail"}, {id:"ghost", n:"FANTÔME 👻", p:4000, t:"trail"}
+        {id:"elec", n:"ELECTRIQUE ⚡", p:2000, t:"trail"}, {id:"space", n:"GALACTIQUE ✨", p:2500, t:"trail"}
     ];
 
     function renderShop() {
         let h = ""; shopItems.forEach(item => {
-            const isO = owned.includes(item.id);
-            const isEq = (item.t === "skin") ? ballColor === item.id : currentTrail === item.id;
+            const isO = owned.includes(item.id); const isEq = (item.t === "skin") ? ballColor === item.id : currentTrail === item.id;
             h += `<div class="item-card"><div><div class="item-name">${item.n}</div><div style="font-size:9px;color:#ffd700">${isO?'POSSÉDÉ':item.p+' 🪙'}</div></div>
             <button class="buy-btn ${isEq?'equipped':''}" onclick="buy('${item.id}',${item.p},'${item.t}')">${isO ? (isEq ? 'EQUIPÉ' : 'CHOISIR') : 'ACHETER'}</button></div>`;
         });
         document.getElementById('shop').innerHTML = h;
     }
 
-    function buy(id, p, type) {
-        if(owned.includes(id)) { if(type==="skin") ballColor=id; else currentTrail=id; }
-        else if(coins >= p) { coins -= p; owned.push(id); if(type==="skin") ballColor=id; else currentTrail=id; }
-        sync(); renderShop();
-    }
-
+    function buy(id, p, type) { if(owned.includes(id)){ if(type==="skin") ballColor=id; else currentTrail=id; } else if(coins >= p){ coins-=p; owned.push(id); if(type==="skin") ballColor=id; else currentTrail=id; } sync(); renderShop(); }
     function renderLvls() { let h=""; for(let i=1; i<=9; i++) h+=`<div class="btn-ui" style="opacity:${i<=reached?1:0.2}; padding:10px; margin:0;" onclick="if(${i<=reached})start(${i})">${i}</div>`; document.getElementById('lvls').innerHTML=h; }
-    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballTilt=0; trailPoints=[]; stars.forEach(s=>s.c="#fff"); document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function start(l) { currentLvl=l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballVX=0; trailPoints=[]; stars.forEach(s=>s.c="#fff"); document.getElementById('screen-hub').classList.remove('active-screen'); }
     function closeWin() { document.getElementById('screen-win').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); }
 
-    window.onkeydown=e=>{if(e.key.includes("Left"))keys["L"]=true;if(e.key.includes("Right"))keys["R"]=true;};
-    window.onkeyup=e=>{if(e.key.includes("Left"))keys["L"]=false;if(e.key.includes("Right"))keys["R"]=false;};
-
-    function drawTrail() {
-        if(currentTrail === "none") return;
-        trailPoints.push({x: ballX, y: ballY}); if(trailPoints.length > 12) trailPoints.shift();
-        ctx.lineWidth = 15; ctx.lineCap = "round";
-        for(let i=0; i<trailPoints.length-1; i++) {
-            ctx.beginPath(); ctx.moveTo(trailPoints[i].x, trailPoints[i].y); ctx.lineTo(trailPoints[i+1].x, trailPoints[i+1].y);
-            if(currentTrail === "rainbow") ctx.strokeStyle = `hsl(${Date.now()/10 + i*30}, 100%, 50%)`;
-            else if(currentTrail === "elec") ctx.strokeStyle = "#00f2ff";
-            else if(currentTrail === "fire_t") ctx.strokeStyle = "#ff4400";
-            else ctx.strokeStyle = "rgba(255,255,255,0.2)";
-            ctx.stroke();
-        }
-    }
+    // CONTROLES TACTILES AMELIORES
+    const bL = document.getElementById('btn-L'); const bR = document.getElementById('btn-R');
+    bL.ontouchstart = (e) => { e.preventDefault(); keys["L"]=true; }; bL.ontouchend = () => keys["L"]=false;
+    bR.ontouchstart = (e) => { e.preventDefault(); keys["R"]=true; }; bR.ontouchend = () => keys["R"]=false;
+    window.onkeydown=e=>{ if(e.key.includes("Left"))keys["L"]=true; if(e.key.includes("Right"))keys["R"]=true; };
+    window.onkeyup=e=>{ if(e.key.includes("Left"))keys["L"]=false; if(e.key.includes("Right"))keys["R"]=false; };
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
@@ -171,28 +152,39 @@
         if(state === "PLAY") {
             const themes = {1:"#00f2ff", 2:"#00ff88", 3:"#ffff00", 4:"#ff8800", 5:"#ff0044", 6:"#ff00ff", 7:"#8800ff", 8:"#ffffff", 9:"#ffd700", INF:"#ff007f"};
             const theme = themes[currentLvl] || "#00f2ff";
+            
+            // SENSIBILITE DOUCE (PHYSIQUE)
+            if(keys["L"]) ballVX -= 1.8; else if(keys["R"]) ballVX += 1.8;
+            ballVX *= 0.82; // Friction pour éviter que ça glisse trop
+            ballX += ballVX;
+            ballTilt = ballVX * 0.03;
+            ballX = Math.max(25, Math.min(575, ballX));
+
+            // TRAINEE
+            if(currentTrail!=="none") {
+                trailPoints.push({x: ballX, y: ballY}); if(trailPoints.length > 10) trailPoints.shift();
+                ctx.lineWidth = 12; ctx.lineCap = "round";
+                for(let i=0; i<trailPoints.length-1; i++){
+                    ctx.beginPath(); ctx.moveTo(trailPoints[i].x, trailPoints[i].y); ctx.lineTo(trailPoints[i+1].x, trailPoints[i+1].y);
+                    ctx.strokeStyle = (currentTrail==="rainbow") ? `hsl(${Date.now()/5+i*20},100%,50%)` : (currentTrail==="elec"?"#00f2ff":"#fff");
+                    ctx.stroke();
+                }
+            }
+
             const speed = (currentLvl==='INF') ? 8 : 4.5 + (currentLvl*0.4);
-            const gap = (currentLvl==='INF') ? 145 : 195 - (currentLvl*6);
+            const gap = (currentLvl==='INF') ? 150 : 200 - (currentLvl*6);
 
-            if(keys["L"]) { ballX-=14; ballTilt = Math.max(ballTilt-0.08, -0.4); } 
-            else if(keys["R"]) { ballX+=14; ballTilt = Math.min(ballTilt+0.08, 0.4); } 
-            else { ballTilt *= 0.8; }
-            ballX=Math.max(25,Math.min(575,ballX));
-
-            drawTrail();
-
-            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 280)) {
+            if(Math.random()<0.05 && (obs.length===0 || obs[obs.length-1].y > 300)) {
                 let c=Math.random()*(600-gap-100)+(gap/2+50);
                 obs.push({g:c, y:-50, p:false});
-                if(Math.random()<0.35) pieces.push({x:c, y:-50});
+                if(Math.random()<0.4) pieces.push({x:c, y:-50});
             }
 
             obs.forEach(o => {
                 o.y += speed; ctx.shadowBlur = 15; ctx.shadowColor = theme; ctx.strokeStyle = theme; ctx.lineWidth = 35;
                 ctx.beginPath(); ctx.moveTo(0,o.y); ctx.lineTo(o.g-gap/2, o.y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke();
-                ctx.shadowBlur = 0;
-                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { state="HUB"; stars.forEach(s=>s.c="#f00"); document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); }
+                ctx.beginPath(); ctx.moveTo(o.g+gap/2, o.y); ctx.lineTo(600, o.y); ctx.stroke(); ctx.shadowBlur = 0;
+                if(o.y>ballY-20 && o.y<ballY+20 && (ballX<o.g-gap/2+15 || ballX>o.g+gap/2-15)) { state="HUB"; stars.forEach(s=>s.c="#f00"); document.getElementById('screen-hub').classList.add('active-screen'); sync(); }
                 if(o.y > ballY && !o.p) { o.p=true; score++; if(score>=30 && currentLvl!=='INF') { state="WIN"; if(currentLvl===reached)reached++; document.getElementById('stars-display').innerText="⭐ ⭐ ⭐"; document.getElementById('screen-win').classList.add('active-screen'); sync(); } }
             });
 
