@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - ULTIMATE</title>
+    <title>CYBER DASH</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -11,18 +11,38 @@
     <style>
         * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #020205; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        #left-col { width: 220px; border-right: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; background: radial-gradient(circle, #0a0a20 0%, #020205 100%); }
-        #right-col { width: 380px; border-left: 1px solid #00f2ff44; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
-        canvas { height: 95vh; aspect-ratio: 9/16; border: 3px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border-radius: 8px; background: #000; z-index: 1; }
-        .panel-header { padding: 15px; font-size: 14px; color: #00f2ff; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00f2ff44; }
-        .scroll-list { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding: 10px; }
-        .rank-card { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; border-left: 3px solid #00f2ff; font-size: 12px; animation: fadeIn 0.5s ease; }
-        .rank-card b { color: #00f2ff; }
-        .log-card { padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px; border-left: 4px solid #bc00ff; background: rgba(188, 0, 255, 0.05); }
+        
+        #left-col, #right-col { width: 250px; border: 1px solid #00f2ff22; background: rgba(0, 242, 255, 0.02); display: flex; flex-direction: column; }
+        #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+
+        canvas { height: 95vh; aspect-ratio: 9/16; border: 2px solid #00f2ff; box-shadow: 0 0 20px #00f2ff55; background: #000; }
+
+        /* MENU NIVEAUX */
+        #level-menu {
+            position: absolute; width: 85%; max-height: 70%; overflow-y: auto;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;
+            background: rgba(0,0,0,0.95); border: 2px solid #00f2ff; border-radius: 15px; z-index: 10;
+        }
+        .level-card {
+            aspect-ratio: 1; border: 2px solid #333; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer; border-radius: 10px;
+            transition: 0.3s; background: #050510;
+        }
+        .level-card.unlocked { border-color: #00f2ff; }
+        .level-card.locked { opacity: 0.3; cursor: not-allowed; }
+        .stars { color: #ffcc00; font-size: 14px; }
+        
         #mobileInput { position: absolute; opacity: 0; pointer-events: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 1000px) { #left-col, #right-col { display: none !important; } #game-col { width: 100vw; height: 100vh; } canvas { width: 100vw; height: 100vh; border: none; border-radius: 0; } }
+        .panel-header { padding: 10px; color: #00f2ff; text-align: center; border-bottom: 1px solid #00f2ff44; }
+        
+        /* UI Powerups */
+        #ui-overlay { position: absolute; top: 20px; left: 20px; pointer-events: none; }
+        .badge { padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; font-size: 12px; display: none; }
+
+        @media (max-width: 1000px) {
+            #left-col, #right-col { display: none !important; }
+            canvas { width: 100vw; height: 100vh; border: none; }
+        }
     </style>
 </head>
 <body>
@@ -30,178 +50,209 @@
     <input type="text" id="mobileInput" maxlength="10">
 
     <div id="left-col">
-        <div class="panel-header">🏆 Top 15 World</div>
-        <div id="leaderboard" class="scroll-list"></div>
+        <div class="panel-header">HALL OF FAME</div>
+        <div id="leaderboard" style="overflow-y:auto; flex-grow:1; padding:10px;"></div>
     </div>
 
     <div id="game-col">
         <canvas id="gameCanvas"></canvas>
+        <div id="level-menu" style="display: none;"></div>
+        <div id="ui-overlay">
+            <div id="shield-badge" class="badge" style="background: #00ff00; color: #000;">🛡️ BOUCLIER</div>
+            <div id="slow-badge" class="badge" style="background: #ffff00; color: #000;">⏳ RALENTI</div>
+        </div>
     </div>
 
     <div id="right-col">
-        <div class="panel-header">🛰️ Live Tracking</div>
-        <div id="logs" class="scroll-list"></div>
+        <div class="panel-header">SYSTEM LOGS</div>
+        <div id="logs" style="overflow-y:auto; flex-grow:1; padding:10px; font-size: 10px;"></div>
     </div>
 
     <script>
         const firebaseConfig = {
-          apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
-          authDomain: "cyberdash-2baf5.firebaseapp.com",
-          databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app",
-          projectId: "cyberdash-2baf5",
-          storageBucket: "cyberdash-2baf5.firebasestorage.app",
-          messagingSenderId: "360233647601",
-          appId: "1:360233647601:web:60aa25f439019ed7511850"
+            apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
+            authDomain: "cyberdash-2baf5.firebaseapp.com",
+            databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "cyberdash-2baf5",
+            storageBucket: "cyberdash-2baf5.firebasestorage.app",
+            messagingSenderId: "360233647601",
+            appId: "1:360233647601:web:60aa25f439019ed7511850"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const mInput = document.getElementById('mobileInput');
-        let net = { ip: "...", loc: "Detecting..." };
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            net.ip = d.ip; net.loc = `${d.city}, ${d.country_name} ${d.country_emoji || ''}`;
-        });
+        // PROGRESSION
+        let prog = JSON.parse(localStorage.getItem('cyberDashProg')) || { 1: {stars: 0} };
 
-        function pushLog(u, a) {
-            db.ref('logs').push({ user: u, action: a, loc: net.loc, time: new Date().toLocaleTimeString() });
-        }
-
-        // --- CLASSEMENT (CORRIGÉ) ---
-        db.ref('bestScores').on('value', snap => {
-            let entries = [];
-            snap.forEach(c => {
-                let d = c.val();
-                if(d.name && d.score !== undefined) entries.push(d);
-            });
-            entries.sort((a,b) => b.score - a.score);
-            let top15 = entries.slice(0, 15);
-            
-            const list = document.getElementById('leaderboard');
-            if(top15.length === 0) {
-                list.innerHTML = "<div style='text-align:center;font-size:10px;color:#666'>En attente de pilotes...</div>";
-            } else {
-                list.innerHTML = top15.map((s,i) => `
-                    <div class="rank-card">
-                        <span><b>#${i+1}</b> ${s.name}</span>
-                        <span style="color:#00f2ff">${s.score}</span>
-                    </div>
-                `).join('');
+        function initLevelMenu() {
+            const menu = document.getElementById('level-menu');
+            menu.innerHTML = "";
+            for(let i=1; i<=10; i++) {
+                let isUnlocked = (i === 1 || (prog[i-1] && prog[i-1].stars === 3));
+                let stars = prog[i] ? prog[i].stars : 0;
+                let statusClass = isUnlocked ? 'unlocked' : 'locked';
+                let starDraw = isUnlocked ? "★".repeat(stars) + "☆".repeat(3-stars) : "LOCKED 🔒";
+                
+                menu.innerHTML += `<div class="level-card ${statusClass}" onclick="launchLevel(${i}, ${isUnlocked})">
+                    <h3>${i}</h3><div class="stars">${starDraw}</div></div>`;
             }
-        });
-
-        db.ref('logs').limitToLast(15).on('value', snap => {
-            let html = "";
-            snap.forEach(c => {
-                const l = c.val();
-                let col = l.action.includes("CRASH") ? "#ff4444" : "#00ff88";
-                html = `<div class="log-card" style="border-left-color:${col}"><b>${l.user}</b>: ${l.action}<br><span style="color:#00f2ff">📍 ${l.loc}</span></div>` + html;
-            });
-            document.getElementById('logs').innerHTML = html;
-        });
+        }
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         canvas.width = 600; canvas.height = 1000;
 
-        let state = "MENU", pseudo = "", score = 0, level = 1, ballX = 300, obstacles = [], stars = [], keys = {};
-        for(let i=0; i<60; i++) stars.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2+1});
+        let state = "PSEUDO", pseudo = "", score = 0, ballX = 300, obstacles = [], powerups = [], starsBg = [], keys = {};
+        let currentLvl = null;
+        let activeShield = false, slowMoTimer = 0;
 
-        mInput.addEventListener('input', (e) => { if(state === "MENU") pseudo = e.target.value.toUpperCase(); });
+        for(let i=0; i<50; i++) starsBg.push({x: Math.random()*600, y: Math.random()*1000, s: Math.random()*2});
 
-        window.addEventListener("keydown", e => {
-            if(state === "MENU") {
-                if(e.key === "Enter" && pseudo.length >= 3) startGame();
-                else mInput.focus();
-            }
-            if(state === "GAMEOVER" && e.key === " ") resetToMenu();
-            keys[e.key] = true;
-        });
-        window.addEventListener("keyup", e => keys[e.key] = false);
-
-        canvas.addEventListener("touchstart", e => {
-            e.preventDefault();
-            const r = canvas.getBoundingClientRect();
-            const tx = (e.touches[0].clientX - r.left) / r.width * 600;
-            if(state === "MENU") {
-                mInput.focus();
-                if(tx > 150 && tx < 450 && pseudo.length >= 3) startGame(); 
-            }
-            else if(state === "GAMEOVER") resetToMenu();
-            else { if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true; }
-        }, {passive: false});
-
-        canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
-
-        function startGame() { state = "PLAYING"; mInput.blur(); pushLog(pseudo, "DÉCOLLAGE"); }
-        function resetToMenu() { state = "MENU"; score = 0; level = 1; obstacles = []; ballX = 300; pseudo = ""; mInput.value = ""; }
-
-        function saveScore(p, s) {
-            if(s < 1 || !p) return;
-            // On utilise le pseudo comme clé unique
-            const userKey = p.trim().replace(/[.#$\[\]]/g, ""); 
-            const ref = db.ref('bestScores/' + userKey);
-            ref.once('value').then(snap => {
-                if(!snap.exists() || snap.val().score < s) {
-                    ref.set({ name: p, score: s });
-                }
-            });
+        function launchLevel(n, unlocked) {
+            if(!unlocked) return;
+            currentLvl = { id: n, target: n * 12, speed: 8 + (n * 1.2) };
+            document.getElementById('level-menu').style.display = 'none';
+            resetGameState();
+            state = "PLAYING";
         }
 
+        function resetGameState() {
+            score = 0; obstacles = []; powerups = []; ballX = 300;
+            activeShield = false; slowMoTimer = 0;
+            updateBadges();
+        }
+
+        const mInput = document.getElementById('mobileInput');
+        mInput.addEventListener('input', (e) => { if(state === "PSEUDO") pseudo = e.target.value.toUpperCase(); });
+
+        canvas.addEventListener("touchstart", e => {
+            const r = canvas.getBoundingClientRect();
+            const tx = (e.touches[0].clientX - r.left) / r.width * 600;
+            if(state === "PSEUDO") {
+                mInput.focus();
+                if(pseudo.length >= 3 && tx > 200 && tx < 400) {
+                    state = "MENU_LEVEL";
+                    document.getElementById('level-menu').style.display = 'grid';
+                    initLevelMenu();
+                }
+            } else if(state === "GAMEOVER" || state === "WIN") {
+                state = "MENU_LEVEL";
+                document.getElementById('level-menu').style.display = 'grid';
+                initLevelMenu();
+            } else {
+                if(tx < 300) keys["ArrowLeft"] = true; else keys["ArrowRight"] = true;
+            }
+        });
+        canvas.addEventListener("touchend", () => { keys["ArrowLeft"] = false; keys["ArrowRight"] = false; });
+
         function update() {
-            stars.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
+            starsBg.forEach(s => { s.y += 2; if(s.y > 1000) s.y = 0; });
             if(state !== "PLAYING") return;
-            let spd = 9 + (level * 0.4);
-            if(keys["ArrowLeft"]) ballX -= 12;
-            if(keys["ArrowRight"]) ballX += 12;
+
+            if(slowMoTimer > 0) slowMoTimer--;
+            updateBadges();
+
+            let moveSpeed = 12;
+            if(keys["ArrowLeft"]) ballX -= moveSpeed;
+            if(keys["ArrowRight"]) ballX += moveSpeed;
             ballX = Math.max(30, Math.min(570, ballX));
-            if(Math.random() < 0.05) {
-                let w = Math.max(165, 430 - (level * 15));
+
+            // Spawn Obstacles
+            if(Math.random() < 0.06) {
+                let w = Math.max(150, 420 - (currentLvl.id * 15));
                 obstacles.push({x: Math.random()*(600-w), y: -50, w: w, hit: false});
             }
+            // Spawn Powerups
+            if(Math.random() < 0.005) {
+                let type = Math.random() < 0.5 ? 'shield' : 'slowmo';
+                powerups.push({x: Math.random()*540+30, y: -50, type: type});
+            }
+
+            let fallSpeed = slowMoTimer > 0 ? currentLvl.speed / 2 : currentLvl.speed;
+
             obstacles.forEach(o => {
-                o.y += spd;
-                if(o.y > 875 && o.y < 915 && !(ballX > o.x && ballX < o.x + o.w)) {
-                    state = "GAMEOVER";
-                    pushLog(pseudo, "CRASH (" + score + ")");
-                    saveScore(pseudo, score);
+                o.y += fallSpeed;
+                if(o.y > 880 && o.y < 920 && !(ballX > o.x && ballX < o.x + o.w)) {
+                    if(activeShield) {
+                        activeShield = false;
+                        o.y = 1100;
+                    } else {
+                        state = "GAMEOVER";
+                        saveScoreToFirebase(pseudo, score);
+                    }
                 }
-                if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score % 10 === 0) level++; }
+                if(o.y > 1000 && !o.hit) { o.hit = true; score++; if(score >= currentLvl.target) winLevel(); }
             });
-            obstacles = obstacles.filter(o => o.y < 1100);
+
+            powerups.forEach((p, i) => {
+                p.y += fallSpeed;
+                if(Math.hypot(p.x - ballX, p.y - 900) < 40) {
+                    if(p.type === 'shield') activeShield = true;
+                    else slowMoTimer = 300;
+                    powerups.splice(i, 1);
+                }
+            });
+            
+            obstacles = obstacles.filter(o => o.y < 1050);
+            powerups = powerups.filter(p => p.y < 1050);
+        }
+
+        function winLevel() {
+            state = "WIN";
+            prog[currentLvl.id] = { stars: 3 };
+            localStorage.setItem('cyberDashProg', JSON.stringify(prog));
+        }
+
+        function updateBadges() {
+            document.getElementById('shield-badge').style.display = activeShield ? 'block' : 'none';
+            document.getElementById('slow-badge').style.display = slowMoTimer > 0 ? 'block' : 'none';
         }
 
         function draw() {
             ctx.fillStyle = "#020205"; ctx.fillRect(0,0,600,1000);
-            ctx.fillStyle = "rgba(255,255,255,0.8)";
-            stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+            ctx.fillStyle = "#fff"; starsBg.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
 
-            if(state === "MENU") {
+            if(state === "PSEUDO") {
                 ctx.textAlign = "center"; ctx.fillStyle = "#00f2ff"; ctx.font = "900 60px Orbitron";
                 ctx.fillText("CYBER DASH", 300, 350);
-                ctx.fillStyle = "#fff"; ctx.font = "16px Orbitron";
-                ctx.fillText("TAPOTE ICI POUR TON PSEUDO :", 300, 450);
-                ctx.fillStyle = "#00f2ff"; ctx.font = "bold 45px Orbitron";
-                ctx.fillText(pseudo || "____", 300, 520);
-                if(pseudo.length >= 3) {
-                    ctx.fillStyle = "#00ff88"; ctx.font = "14px Orbitron";
-                    ctx.fillText("CLIQUE ICI POUR JOUER", 300, 600);
-                }
+                ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron";
+                ctx.fillText("PILOTE: " + (pseudo || "____"), 300, 500);
             } else if(state === "PLAYING") {
                 ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillStyle = "#00f2ff";
-                obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 35); ctx.fillRect(o.x+o.w, o.y, 600, 35); });
-                ctx.shadowBlur = 20; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(ballX, 900, 22, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 10; ctx.textAlign = "left"; ctx.font = "900 60px Orbitron";
-                ctx.fillText(score, 40, 90);
+                obstacles.forEach(o => { ctx.fillRect(0, o.y, o.x, 30); ctx.fillRect(o.x+o.w, o.y, 600, 30); });
+                
+                powerups.forEach(p => {
+                    ctx.fillStyle = p.type === 'shield' ? "#0f0" : "#ff0";
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI*2); ctx.fill();
+                });
+
+                ctx.shadowBlur = 20; ctx.shadowColor = activeShield ? "#0f0" : "#fff";
+                ctx.fillStyle = activeShield ? "#0f0" : "#fff";
+                ctx.beginPath(); ctx.arc(ballX, 900, 20, 0, Math.PI*2); ctx.fill();
+                
+                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "900 50px Orbitron";
+                ctx.fillText(score + " / " + currentLvl.target, 300, 100);
+            } else if(state === "WIN") {
+                ctx.fillStyle = "#0f8"; ctx.font = "900 60px Orbitron"; ctx.textAlign = "center";
+                ctx.fillText("LEVEL CLEAR", 300, 450);
+                ctx.font = "20px Orbitron"; ctx.fillText("SUIVANT DÉBLOQUÉ ★★★", 300, 520);
             } else if(state === "GAMEOVER") {
-                ctx.textAlign = "center"; ctx.fillStyle = "#ff0044"; ctx.font = "900 70px Orbitron";
+                ctx.fillStyle = "#f04"; ctx.font = "900 70px Orbitron"; ctx.textAlign = "center";
                 ctx.fillText("CRASHED", 300, 450);
-                ctx.fillStyle = "#fff"; ctx.font = "30px Orbitron";
-                ctx.fillText("SCORE: " + score, 300, 550);
-                ctx.font = "15px Orbitron"; ctx.fillText("TOUCHER POUR RECOMMENCER", 300, 620);
             }
-            ctx.shadowBlur = 0; requestAnimationFrame(draw);
+            requestAnimationFrame(draw);
         }
+
+        function saveScoreToFirebase(p, s) {
+            if(!p) return;
+            db.ref('bestScores/' + p.replace(/\W/g, '')).set({ name: p, score: s });
+        }
+
+        db.ref('bestScores').orderByChild('score').limitToLast(10).on('value', s => {
+            let h = ""; s.forEach(c => { h = `<div style="padding:5px; border-bottom:1px solid #333; font-size:11px;"><b>${c.val().name}</b>: ${c.val().score}</div>` + h; });
+            document.getElementById('leaderboard').innerHTML = h;
+        });
+
         setInterval(update, 1000/60);
         draw();
     </script>
