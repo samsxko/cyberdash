@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CYBER DASH - VERSION FINALE</title>
+    <title>CYBER DASH - RECALIBRÉ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -10,237 +10,84 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
         body { background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-
-        /* INTERFACE PC */
         #left-col, #right-col { width: 260px; border: 2px solid #ffffff22; background: rgba(5,5,15,0.9); margin: 10px; border-radius: 15px; display: flex; flex-direction: column; }
         #game-col { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         .panel-title { padding: 15px; text-align: center; font-weight: 900; border-bottom: 1px solid #ffffff22; color: #00f2ff; }
-
-        /* ZONE DE JEU */
         #container { height: 92vh; aspect-ratio: 9/16; position: relative; border: 3px solid #fff; background: #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; }
-
-        /* BOUTONS MOBILES BLANCS */
         .m-btn { display: none; position: absolute; bottom: 40px; width: 85px; height: 85px; background: rgba(255,255,255,0.05); border: 3px solid #fff; border-radius: 50%; z-index: 500; justify-content: center; align-items: center; font-weight: 900; box-shadow: 0 0 15px #fff; transition: 0.1s; }
         .m-btn.active { background: #fff; color: #000; box-shadow: 0 0 50px #fff; transform: scale(1.1); }
         #btn-L { left: 20px; } #btn-R { right: 20px; }
-
-        /* ECRANS UI */
         .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; }
         .active-screen { display: flex !important; }
         .btn-ui { border: 2px solid #fff; padding: 12px 30px; color: #fff; cursor: pointer; font-weight: 900; margin-top: 20px; transition: 0.3s; }
         .btn-ui:hover { background: #fff; color: #000; }
-
-        /* ETOILES */
         .star-box { margin: 20px; display: flex; gap: 10px; }
-        .star { font-size: 50px; color: #ffd700; opacity: 0; transform: scale(0); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .star.pop { opacity: 1; transform: scale(1.2); text-shadow: 0 0 25px #ffd700; }
-
+        .star { font-size: 50px; color: #ffd700; opacity: 0; transform: scale(0); transition: 0.5s; }
+        .star.pop { opacity: 1; transform: scale(1.2); }
         @media (max-width: 1000px) { #left-col, #right-col { display: none; } #container { width: 100vw; height: 100vh; border: none; } .m-btn { display: flex; } }
     </style>
 </head>
 <body>
 
-    <div id="left-col">
-        <div class="panel-title">CLASSEMENT</div>
-        <div id="leaderboard" style="padding:10px; font-size:11px; flex-grow:1; color:#00f2ff;"></div>
-    </div>
-
+    <div id="left-col"><div class="panel-title">CLASSEMENT</div><div id="leaderboard" style="padding:10px; font-size:11px; flex-grow:1; color:#00f2ff;"></div></div>
     <div id="game-col">
         <div id="container">
-            <div id="btn-L" class="m-btn">L</div>
-            <div id="btn-R" class="m-btn">R</div>
-
-            <div id="screen-login" class="screen active-screen">
-                <h1 style="font-size:30px; letter-spacing:5px;">CYBER DASH</h1>
-                <input type="text" id="nick" placeholder="TON PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; font-family:'Orbitron'; outline:none; width:70%;">
-                <div class="btn-ui" onclick="init()">JOUER</div>
-            </div>
-
-            <div id="screen-hub" class="screen">
-                <div id="hub-stats" style="color:#00f2ff; margin-bottom:15px; font-size:14px;"></div>
-                <div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
-                <div class="btn-ui" onclick="start('INF')" style="color:#00f2ff; border-color:#00f2ff;">MODE INFINI</div>
-            </div>
-
-            <div id="screen-win" class="screen">
-                <h2 style="color:#fff;">NIVEAU RÉUSSI !</h2>
-                <div class="star-box">
-                    <span class="star" id="s1">★</span><span class="star" id="s2">★</span><span class="star" id="s3">★</span>
-                </div>
-                <div class="btn-ui" onclick="location.reload()">CONTINUER</div>
-            </div>
-
+            <div id="btn-L" class="m-btn">L</div><div id="btn-R" class="m-btn">R</div>
+            <div id="screen-login" class="screen active-screen"><h1>CYBER DASH</h1><input type="text" id="nick" placeholder="PSEUDO..." style="margin-top:20px; padding:12px; background:none; border:2px solid #fff; color:#fff; text-align:center; outline:none; width:70%;"><div class="btn-ui" onclick="init()">JOUER</div></div>
+            <div id="screen-hub" class="screen"><div id="hub-stats" style="color:#00f2ff; margin-bottom:15px;"></div><div id="lvls" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div><div class="btn-ui" onclick="start('INF')">MODE INFINI</div></div>
+            <div id="screen-win" class="screen"><h2>RÉUSSI !</h2><div class="star-box"><span class="star" id="s1">★</span><span class="star" id="s2">★</span><span class="star" id="s3">★</span></div><div class="btn-ui" onclick="location.reload()">RETOUR</div></div>
             <canvas id="cvs"></canvas>
         </div>
     </div>
-
-    <div id="right-col">
-        <div class="panel-title">BOUTIQUE</div>
-        <div id="shop" style="flex-grow:1; padding:10px;">
-            <div id="shop-items"></div>
-        </div>
-        <div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222; font-size:18px;">0 🪙</div>
-    </div>
+    <div id="right-col"><div class="panel-title">BOUTIQUE</div><div id="shop" style="flex-grow:1; padding:10px;"><div id="shop-items"></div></div><div id="user-coins" style="text-align:center; color:#ffd700; font-weight:900; padding:15px; border-top:1px solid #222;">0 🪙</div></div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0",
-        authDomain: "cyberdash-2baf5.firebaseapp.com",
-        databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "cyberdash-2baf5",
-        storageBucket: "cyberdash-2baf5.firebasestorage.app",
-        messagingSenderId: "360233647601",
-        appId: "1:360233647601:web:60aa25f439019ed7511850"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const cvs = document.getElementById("cvs");
-    const ctx = cvs.getContext("2d");
-    cvs.width = 600; cvs.height = 1000;
-
-    let user = "", ip = "", coins = 0, record = 0, reached = 1, currentLvl = 1;
-    let ballX = 300, ballY = 750, obs = [], pieces = [], keys = {}, state = "LOGIN", score = 0;
-    let ballColor = "#fff", owned = ["#fff"];
+    const firebaseConfig = { apiKey: "AIzaSyDoNMSFtT2i8Eqt_G3UwR92AxbtHhumDF0", authDomain: "cyberdash-2baf5.firebaseapp.com", databaseURL: "https://cyberdash-2baf5-default-rtdb.europe-west1.firebasedatabase.app", projectId: "cyberdash-2baf5", storageBucket: "cyberdash-2baf5.firebasestorage.app", messagingSenderId: "360233647601", appId: "1:360233647601:web:60aa25f439019ed7511850" };
+    firebase.initializeApp(firebaseConfig); const db = firebase.database();
+    const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); cvs.width = 600; cvs.height = 1000;
+    let user = "", ip = "", coins = 0, record = 0, reached = 1, currentLvl = 1, ballX = 300, ballY = 750, obs = [], pieces = [], keys = {}, state = "LOGIN", score = 0, ballColor = "#fff", owned = ["#fff"];
 
     function sync() { db.ref('users/'+ip).update({coins, record, reached, owned, ballColor, user}); }
-
-    function init() {
-        user = document.getElementById('nick').value.toUpperCase(); if(!user) return;
-        document.getElementById('screen-login').classList.remove('active-screen');
-        document.getElementById('screen-hub').classList.add('active-screen');
-        fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
-            ip = d.ip.replace(/\./g, '_');
-            db.ref('users/'+ip).on('value', s=>{
-                const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; ballColor=v.ballColor||"#fff";
-                document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV. MAX: ${reached}`;
-                document.getElementById('user-coins').innerText = `${coins} 🪙`;
-                renderLvls(); renderShop();
-            });
-        });
-    }
-
-    function renderShop() {
-        let h = ""; [{id:"#00f2ff", n:"NEON", p:100}, {id:"#ff00ff", n:"PINK", p:250}, {id:"#ffd700", n:"GOLD", p:600}].forEach(s => {
-            const isOwned = owned.includes(s.id);
-            h += `<div style="border:1px solid #ffffff22; background:rgba(0,0,0,0.5); padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; font-size:11px; ${isOwned?'border-color:#00f2ff; color:#00f2ff;':''}" onclick="buy('${s.id}',${s.p})">
-                <span>${s.n}</span><span>${isOwned?'POSSÉDÉ':s.p+' 🪙'}</span>
-            </div>`;
-        });
-        document.getElementById('shop-items').innerHTML = h;
-    }
-
-    function buy(id, p) {
-        if(owned.includes(id)) { ballColor = id; sync(); }
-        else if(coins >= p) { coins -= p; owned.push(id); ballColor = id; sync(); }
-    }
-
-    function renderLvls() {
-        let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:18px; margin:0; opacity:${i<=reached?1:0.2}; border-color:${i<=reached?'#fff':'#444'}" onclick="if(${i<=reached}) start(${i})">${i}</div>`; }
-        document.getElementById('lvls').innerHTML = h;
-    }
-
-    function start(l) { 
-        currentLvl = l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750;
-        document.getElementById('screen-hub').classList.remove('active-screen'); 
-    }
-
-    function press(dir, act) { 
-        keys[dir] = act; 
-        const btn = document.getElementById('btn-'+dir);
-        if(btn) { if(act) btn.classList.add('active'); else btn.classList.remove('active'); }
-    }
-    window.onkeydown = e => { if(e.key==="ArrowLeft") press("L", true); if(e.key==="ArrowRight") press("R", true); };
-    window.onkeyup = e => { if(e.key==="ArrowLeft") press("L", false); if(e.key==="ArrowRight") press("R", false); };
-    document.getElementById('btn-L').ontouchstart = e => { e.preventDefault(); press("L", true); };
-    document.getElementById('btn-L').ontouchend = () => press("L", false);
-    document.getElementById('btn-R').ontouchstart = e => { e.preventDefault(); press("R", true); };
-    document.getElementById('btn-R').ontouchend = () => press("R", false);
+    function init() { user = document.getElementById('nick').value.toUpperCase() || "PLAYER"; document.getElementById('screen-login').classList.remove('active-screen'); document.getElementById('screen-hub').classList.add('active-screen'); fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{ ip = d.ip.replace(/\./g, '_'); db.ref('users/'+ip).on('value', s=>{ const v = s.val()||{}; coins=v.coins||0; record=v.record||0; reached=v.reached||1; owned=v.owned||["#fff"]; ballColor=v.ballColor||"#fff"; document.getElementById('hub-stats').innerText = `BEST: ${record} | NIV: ${reached}`; document.getElementById('user-coins').innerText = `${coins} 🪙`; renderLvls(); renderShop(); }); }); }
+    function renderShop() { let h = ""; [{id:"#00f2ff", n:"NEON", p:100}, {id:"#ff00ff", n:"PINK", p:250}, {id:"#ffd700", n:"GOLD", p:600}].forEach(s => { const isOwned = owned.includes(s.id); h += `<div style="border:1px solid #ffffff22; padding:10px; margin-bottom:5px; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; ${isOwned?'color:#00f2ff;':''}" onclick="buy('${s.id}',${s.p})"><span>${s.n}</span><span>${isOwned?'POSSÉDÉ':s.p+' 🪙'}</span></div>`; }); document.getElementById('shop-items').innerHTML = h; }
+    function buy(id, p) { if(owned.includes(id)) { ballColor = id; sync(); } else if(coins >= p) { coins -= p; owned.push(id); ballColor = id; sync(); } }
+    function renderLvls() { let h = ""; for(let i=1; i<=9; i++) { h += `<div class="btn-ui" style="padding:15px; opacity:${i<=reached?1:0.3};" onclick="if(${i<=reached}) start(${i})">${i}</div>`; } document.getElementById('lvls').innerHTML = h; }
+    function start(l) { currentLvl = l; state="PLAY"; score=0; obs=[]; pieces=[]; ballX=300; ballY=750; document.getElementById('screen-hub').classList.remove('active-screen'); }
+    function press(dir, act) { keys[dir] = act; const b = document.getElementById('btn-'+dir); if(b) act?b.classList.add('active'):b.classList.remove('active'); }
+    window.onkeydown=e=>{if(e.key==="ArrowLeft")press("L",true);if(e.key==="ArrowRight")press("R",true);};
+    window.onkeyup=e=>{if(e.key==="ArrowLeft")press("L",false);if(e.key==="ArrowRight")press("R",false);};
+    document.getElementById('btn-L').ontouchstart=e=>{e.preventDefault();press("L",true);}; document.getElementById('btn-L').ontouchend=()=>press("L",false);
+    document.getElementById('btn-R').ontouchstart=e=>{e.preventDefault();press("R",true);}; document.getElementById('btn-R').ontouchend=()=>press("R",false);
 
     function loop() {
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,600,1000);
         if(state === "PLAY") {
-            // CONFIGURATION PAR NIVEAU
-            const levelScores = { 1: 50, 2: 70, 3: 90, 4: 110, 5: 130, 6: 150, 7: 170, 8: 190, 9: 210 };
-            const levelColors = { 
-                1: "#00f2ff", 2: "#adff2f", 3: "#ffff00", 4: "#ff8c00", 5: "#ff00ff", 
-                6: "#9d00ff", 7: "#ff0044", 8: "#0044ff", 9: "#ffffff", INF: "#00f2ff" 
-            };
-            
-            const targetScore = (currentLvl === 'INF') ? Infinity : levelScores[currentLvl];
-            const themeColor = levelColors[currentLvl];
-            const isFinishing = (score >= targetScore);
+            const levelScores = { 1: 30, 2: 50, 3: 70, 4: 90, 5: 110, 6: 130, 7: 150, 8: 170, 9: 200 };
+            const levelColors = { 1:"#00f2ff", 2:"#adff2f", 3:"#ffff00", 4:"#ff8c00", 5:"#ff00ff", 6:"#9d00ff", 7:"#ff0044", 8:"#0044ff", 9:"#ffffff", INF:"#00f2ff" };
+            const target = (currentLvl==='INF')?9999:levelScores[currentLvl];
+            const theme = levelColors[currentLvl];
+            const speed = (currentLvl==='INF')?8:(2.5 + (currentLvl * 0.8)); // VITESSE ADOUCIE
+            const gap = (currentLvl==='INF')?120:(210 - (currentLvl * 10)); // TROU PLUS LARGE
+            const finishing = score >= target;
 
-            // Difficulté crescendo
-            const speed = (currentLvl === 'INF') ? 8.5 : (3.5 + (currentLvl * 0.9)); 
-            const gapWidth = (currentLvl === 'INF') ? 120 : (185 - (currentLvl * 10)); 
-
-            // CONTRÔLES : Bloqués pendant l'animation de fin
-            if(!isFinishing) {
-                if(keys["L"]) ballX -= 13; if(keys["R"]) ballX += 13;
-                ballX = Math.max(30, Math.min(570, ballX));
-            }
-
-            // Génération obstacles (stop si fini)
-            if(!isFinishing && Math.random() < 0.04) {
-                let centerGap = Math.random()*(600 - gapWidth - 100) + (gapWidth/2 + 50);
-                obs.push({g: centerGap, y: -50, p: false});
-                if(Math.random() < 0.4) pieces.push({x: centerGap, y: -50});
-            }
+            if(!finishing) { if(keys["L"]) ballX-=12; if(keys["R"]) ballX+=12; ballX=Math.max(25,Math.min(575,ballX)); }
+            if(!finishing && Math.random()<0.04) { let c=Math.random()*(600-gap-100)+(gap/2+50); obs.push({g:c, y:-50, p:false}); if(Math.random()<0.3) pieces.push({x:c, y:-50}); }
             
             obs.forEach(o => {
-                o.y += speed;
-                ctx.strokeStyle = themeColor; ctx.lineWidth = 5; ctx.shadowBlur = 15; ctx.shadowColor = themeColor;
-                ctx.strokeRect(-10, o.y, o.g - (gapWidth/2), 25); 
-                ctx.strokeRect(o.g + (gapWidth/2), o.y, 610, 25);
-                ctx.shadowBlur = 0;
-
-                if(!isFinishing && o.y > ballY-20 && o.y < ballY+25 && (ballX < o.g - (gapWidth/2 - 15) || ballX > o.g + (gapWidth/2 - 15))) {
-                    state = "HUB"; document.getElementById('screen-hub').classList.add('active-screen');
-                    record = Math.max(record, score); sync();
-                }
-                if(o.y > ballY && !o.p) { o.p = true; score++; }
+                o.y += speed; ctx.strokeStyle=theme; ctx.lineWidth=5; ctx.shadowBlur=15; ctx.shadowColor=theme;
+                ctx.strokeRect(-10, o.y, o.g-(gap/2), 25); ctx.strokeRect(o.g+(gap/2), o.y, 610, 25); ctx.shadowBlur=0;
+                if(!finishing && o.y > ballY-15 && o.y < ballY+20 && (ballX < o.g-(gap/2-10) || ballX > o.g+(gap/2-10))) { state="HUB"; document.getElementById('screen-hub').classList.add('active-screen'); record=Math.max(record,score); sync(); }
+                if(o.y > ballY && !o.p) { o.p=true; score++; }
             });
+            pieces.forEach((p,i)=>{ p.y+=speed; ctx.fillStyle="#ffd700"; ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2); ctx.fill(); if(!finishing && Math.hypot(p.x-ballX,p.y-ballY)<30){ pieces.splice(i,1); coins++; sync(); } });
 
-            pieces.forEach((p, i) => {
-                p.y += speed;
-                ctx.fillStyle = "#ffd700"; ctx.shadowBlur = 15; ctx.shadowColor = "#ffd700";
-                ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                if(!isFinishing && Math.hypot(p.x-ballX, p.y-ballY) < 35) { pieces.splice(i, 1); coins++; sync(); }
-            });
-
-            // ANIMATION DE FIN : RAPIDE & LUMIÈRE BLANCHE
-            if(isFinishing) {
-                ballY -= 12; // Montée rapide
-                
-                let grad = ctx.createLinearGradient(0, 0, 0, 500);
-                grad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
-                grad.addColorStop(1, "transparent");
-                ctx.fillStyle = grad;
-                ctx.shadowBlur = 30; ctx.shadowColor = "#fff";
-                ctx.fillRect(0, 0, 600, 500);
-                ctx.shadowBlur = 0;
-                
-                if(ballY < -60) {
-                    state = "WIN"; document.getElementById('screen-win').classList.add('active-screen');
-                    setTimeout(()=>document.getElementById('s1').classList.add('pop'), 200);
-                    setTimeout(()=>document.getElementById('s2').classList.add('pop'), 400);
-                    setTimeout(()=>document.getElementById('s3').classList.add('pop'), 600);
-                    if(currentLvl === reached) reached++; sync();
-                }
+            if(finishing) {
+                ballY -= 12; ctx.fillStyle="rgba(255,255,255,0.8)"; ctx.shadowBlur=30; ctx.shadowColor="#fff"; ctx.fillRect(0,0,600,400); ctx.shadowBlur=0;
+                if(ballY < -50) { state="WIN"; document.getElementById('screen-win').classList.add('active-screen'); setTimeout(()=>document.getElementById('s1').classList.add('pop'),200); setTimeout(()=>document.getElementById('s2').classList.add('pop'),400); setTimeout(()=>document.getElementById('s3').classList.add('pop'),600); if(currentLvl===reached)reached++; sync(); }
             }
-
-            // DESSIN BALLE
-            ctx.fillStyle = ballColor; ctx.shadowBlur = 20; 
-            ctx.shadowColor = isFinishing ? "#fff" : themeColor; 
-            ctx.beginPath(); ctx.arc(ballX, ballY, 22, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0; 
-            
-            // HUD
-            ctx.fillStyle = "#fff"; ctx.font = "900 85px Orbitron"; ctx.textAlign = "center";
-            ctx.fillText(score, 300, 150);
-            ctx.fillStyle = "#ffd700"; ctx.font = "20px Orbitron"; ctx.fillText(coins + " 🪙", 300, 185);
+            ctx.fillStyle=ballColor; ctx.shadowBlur=20; ctx.shadowColor=finishing?"#fff":theme; ctx.beginPath(); ctx.arc(ballX,ballY,18,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+            ctx.fillStyle="#fff"; ctx.font="900 80px Orbitron"; ctx.textAlign="center"; ctx.fillText(score,300,150);
         }
         requestAnimationFrame(loop);
     }
