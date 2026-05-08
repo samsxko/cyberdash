@@ -1,3 +1,62 @@
+let user="", ip="", coins=0, currentLvl=1, record=0, ... // Ajoute currentLvl ici
+    ```
+
+### 3. La mise à jour du Record (Score)
+Dans ton code actuel, la variable `record` est récupérée depuis Firebase, mais elle n'est **jamais mise à jour** pendant que le joueur joue. Si le joueur fait 50 en mode Infini, son record restera celui d'avant.
+*   **Correction :** Dans la boucle `loop()`, au moment où le score augmente :
+    ```javascript
+    if(score > record) {
+        record = score;
+        sync();
+    }
+    ```
+
+### 4. Le nettoyage des tableaux (Fuite de mémoire)
+Ton tableau `obs` (obstacles) et `pieces` grandit à l'infini car tu ne supprimes pas les éléments qui sortent de l'écran par le bas. Après 5 minutes de jeu, le navigateur va ralentir.
+*   **Correction :** Ajoute ce filtre à la fin de la logique de jeu dans `loop()` :
+    
+```javascript
+    obs = obs.filter(o => o.y < 1100);
+    pieces = pieces.filter(p => p.y < 1100);
+    ```
+
+### 5. Problème de rendu "ShadowBlur"
+Le `ctx.shadowBlur` est très gourmand en ressources. Tu l'actives dans la boucle des obstacles, mais tu l'appliques aussi potentiellement au texte du score et à d'autres éléments si tu ne le réinitialises pas précisément. 
+*   **Conseil :** Assure-toi que `ctx.shadowBlur = 0;` est bien appelé juste après le dessin des obstacles (ce que tu as fait, mais sois vigilant).
+
+### 6. Interaction Tactile sur Mobile
+Sur iOS (Safari), le `ontouchstart` peut parfois nécessiter un `e.preventDefault()` pour éviter le défilement de la page, mais attention : cela peut bloquer le clic sur d'autres éléments si c'est mal placé. Ton code est correct ici, mais assure-toi que le CSS `touch-action: none;` est bien sur le `body` (c'est le cas).
+
+---
+
+### Résumé des corrections à appliquer dans ton `<script>` :
+
+1.  **Déclare `currentLvl`** en haut.
+2.  **Gère le record** :
+    
+```javascript
+    // Dans la partie où o.p devient true (passage d'obstacle) :
+    if(o.y > ballY && !o.p) {
+        o.p = true;
+        score++;
+        if(currentLvl === 'INF' && score > record) {
+            record = score;
+            sync();
+        }
+        // ... reste du code pour les niveaux
+    }
+    ```
+3.  **Nettoyage des obstacles** :
+    
+```javascript
+    // Juste avant requestAnimationFrame(loop) :
+    obs = obs.filter(o => o.y < 1100);
+    ```
+
+### Note sur les Emojis (Skins)
+Ton code utilise `ctx.fillText` pour les skins comme le BURGER 🍔. C'est malin, mais attention : selon l'ordinateur ou le téléphone, les emojis n'ont pas la même taille. Le centrage `ctx.fillText(emojis[ballColor], 0, 15);` pourrait être légèrement décalé sur certains écrans.
+
+**Verdict :** Le code est propre pour un prototype ! Règle surtout le problème de la variable non déclarée et la mise à jour du record pour que ton classement soit dynamique.
 <!DOCTYPE html>
 <html lang="fr">
 <head>
